@@ -111,14 +111,10 @@ export function SheetMusicView() {
       // multi-track scores once after import.
       const expandedScores = new WeakSet<object>();
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        api.scoreLoaded.on((score: any) => {
+        api.scoreLoaded.on((score) => {
           scoreLoaded.current = true;
-          const tracks = Array.from(score?.tracks ?? []) as any[];
-          if (
-            tracks.length > 1 &&
-            !expandedScores.has(score)
-          ) {
+          const tracks = score.tracks;
+          if (tracks.length > 1 && !expandedScores.has(score)) {
             expandedScores.add(score);
             api.renderTracks(tracks);
           }
