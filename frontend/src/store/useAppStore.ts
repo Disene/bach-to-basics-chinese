@@ -240,6 +240,18 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showSustainedNotes: false,
 };
 
+// MIDI/audio imports create MusicXML in the background. Keep the in-flight
+// promise by document id so features such as auto-fingering can wait for the
+// same conversion instead of racing it or issuing a duplicate request.
+const pendingMusicXml = new Map<string, Promise<void>>();
+
+function trackMusicXmlConversion(id: string, promise: Promise<void>): void {
+  pendingMusicXml.set(id, promise);
+  void promise.finally(() => {
+    if (pendingMusicXml.get(id) === promise) pendingMusicXml.delete(id);
+  });
+}
+
 export const useAppStore = create<AppState>((set, get) => {
   // Subscribe to SyncEngine state changes --> push into Zustand
   syncEngine.onStateChange((s) => {
@@ -300,8 +312,14 @@ export const useAppStore = create<AppState>((set, get) => {
         set({ document: doc });
         await syncEngine.loadDocument(doc);
 
-        // Request MusicXML from backend (non-blocking), using the copy
-        fetchMusicXml(bufferForXml, doc, id).catch((err) => set({ loadError: `MIDI 转乐谱失败：${String(err)}` }));
+        // Request MusicXML from backend in the background. Track the promise so
+        // auto-fingering can wait for the same conversion if the user enables
+        // fingering immediately after import.
+        const musicXmlPromise = fetchMusicXml(bufferForXml, doc, id);
+        trackMusicXmlConversion(id, musicXmlPromise);
+        musicXmlPromise.catch((err) =>
+          set({ loadError: `MIDI 转乐谱失败：${String(err)}` })
+        );
       } catch (err) {
         set({ loadError: String(err) });
       } finally {
@@ -477,7 +495,11 @@ export const useAppStore = create<AppState>((set, get) => {
 
         // Kick off MusicXML transcription so the sheet-music view eventually
         // populates, mirroring loadMidiFile's pattern. Fire-and-forget.
-        fetchMusicXml(bufferForDoc.slice(0), doc, id).catch((err) => set({ loadError: `MIDI 转乐谱失败：${String(err)}` }));
+        const musicXmlPromise = fetchMusicXml(bufferForDoc.slice(0), doc, id);
+        trackMusicXmlConversion(id, musicXmlPromise);
+        musicXmlPromise.catch((err) =>
+          set({ loadError: `MIDI 转乐谱失败：${String(err)}` })
+        );
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         set({ loadError: msg });
@@ -487,18 +509,30 @@ export const useAppStore = create<AppState>((set, get) => {
     },
 
     generateFingering: async () => {
-      const { document: doc } = get();
-      if (!doc?.musicXml) {
-        set({ loadError: "当前曲目还没有可用于生成指法的 MusicXML 数据，请稍后再试。" });
-        return;
-      }
-      if (doc.notes.length === 0) {
-        set({ loadError: "音符数据仍在准备中，请稍后再生成指法。" });
-        return;
-      }
+      let { document: doc } = get();
+      if (!doc) return;
 
       set({ isGeneratingFingering: true, loadError: null });
       try {
+        // MIDI/audio imports create MusicXML asynchronously. If the user enables
+        // fingering before that conversion completes, wait for the existing job
+        // instead of failing early or requiring a second manual click.
+        if (!doc.musicXml) {
+          const pending = pendingMusicXml.get(doc.id);
+          if (pending) await pending;
+
+          const latestDoc = get().document;
+          if (!latestDoc || latestDoc.id !== doc.id) return;
+          doc = latestDoc;
+        }
+
+        if (!doc.musicXml) {
+          throw new Error("当前曲目还没有可用于生成指法的 MusicXML 数据。");
+        }
+        if (doc.notes.length === 0) {
+          throw new Error("音符数据仍在准备中，请稍后再生成指法。");
+        }
+
         const res = await fetch("/api/fingering/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1053,11 +1087,11 @@ async function fetchMusicXml(buffer: ArrayBuffer, doc: MusicDocument, id: string
   }
 
   const { musicxml } = (await res.json()) as { musicxml: string };
-  doc.musicXml = musicxml;
 
-  // Notify sheet view that MusicXML is now available
+  // Merge MusicXML into the latest document snapshot. The conversion is
+  // asynchronous, so the original `doc` argument may already be stale.
   const { document: currentDoc } = useAppStore.getState();
   if (currentDoc?.id === id) {
-    useAppStore.setState({ document: { ...doc } });
+    useAppStore.setState({ document: { ...currentDoc, musicXml } });
   }
 }
