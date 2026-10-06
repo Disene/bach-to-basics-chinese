@@ -876,18 +876,8 @@ function xmlStepToMidi(step: string, octave: number, alter: number): number {
 }
 
 /**
- * Parse fingering annotations from an annotated MusicXML string (returned by
- * /fingering/generate) and splice them into the existing NoteEvent array.
- *
- * Strategy: piano scores from music21 typically have ONE <part> with two
- * <staff> elements (staff 1 = treble = right, staff 2 = bass = left). We
- * bucket fingerings by per-note <staff>; for parts with no staff info we
- * fall back to the part's average MIDI pitch (≥60 → right). Then we match
- * by position index within each hand group: the i-th XML right-hand note
- * → the i-th NoteEvent whose `hand === "right"`.
- *
- * Pianoplayer encodes "anchored" fingers as circled glyphs (①-⑤); we
- * normalize those to plain digits.
+ * Pianoplayer encodes pre-existing "anchor" fingerings as circled glyphs
+ * (①-⑤); normalize them to the same numeric Finger type as generated marks.
  */
 const CIRCLED_FINGER_TO_DIGIT: Record<string, string> = {
   "①": "1",
