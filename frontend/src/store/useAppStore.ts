@@ -807,7 +807,7 @@ function parseMidiInWorker(buffer: ArrayBuffer, id: string, title: string): Prom
     // M3 - kill the worker if it hangs (e.g. malformed MIDI, infinite loop)
     const timeout = setTimeout(() => {
       worker.terminate();
-      reject(new Error("MIDI parsing timed out"));
+      reject(new Error("MIDI 解析超时，请尝试更简单或更小的文件。"));
     }, 30_000);
 
     worker.onmessage = (e) => {
