@@ -22,6 +22,7 @@ SHA256 = "ae714594f40e54b1a4951fc3f914f08ae38fe5d07b7f2283b1a904fdb6e0a318"
 MAX_BYTES = 150 * 1024 * 1024
 LAUNCHER = Path("/opt/audiveris/bin/Audiveris")
 ALIAS = Path("/usr/local/bin/audiveris")
+WRAPPER_MARKER = "# bach-to-basics headless Audiveris wrapper"
 DESKTOP_MENU_DIRS = (
     Path("/usr/share/desktop-directories"),
     Path("/usr/share/applications"),
@@ -93,15 +94,50 @@ def install() -> None:
         )
     if not LAUNCHER.is_file() or not os.access(LAUNCHER, os.X_OK):
         raise RuntimeError("Installed Audiveris launcher is missing or not executable.")
-    # Existing service detection uses a lower-case PATH command. /opt is outside
-    # the existing read-only /app/bin bind mount, so an empty host folder cannot
-    # hide this installation.
-    if ALIAS.exists() or ALIAS.is_symlink():
-        if ALIAS.resolve() != LAUNCHER.resolve():
-            raise RuntimeError("Refusing to replace a different existing audiveris command.")
-    else:
-        ALIAS.symlink_to(LAUNCHER)
+    # Existing service detection uses a lower-case PATH command. Use a tiny
+    # wrapper instead of a symlink so every backend invocation gets a stable
+    # headless Linux scale. Audiveris 5.11 otherwise auto-probes GTK for HiDPI
+    # before CLI parsing, which crashes slim/headless images when GTK is absent.
+    write_headless_wrapper()
     subprocess.run([str(ALIAS), "-batch", "-help"], check=True, timeout=60)
+
+
+def write_headless_wrapper(alias: Path = ALIAS, launcher: Path = LAUNCHER) -> None:
+    """Create the PATH launcher used by the backend for headless batch mode.
+
+    Respect an explicitly supplied GDK_SCALE, but default it to 1 so Audiveris
+    skips its Linux GTK HiDPI auto-detection. Refuse to overwrite unrelated
+    commands in /usr/local/bin.
+    """
+    if alias.exists() or alias.is_symlink():
+        if alias.is_symlink() and alias.resolve() == launcher.resolve():
+            # Replace the symlink created by an earlier installer revision.
+            alias.unlink()
+        elif alias.is_file():
+            try:
+                existing = alias.read_text(encoding="utf-8")
+            except UnicodeDecodeError as exc:
+                raise RuntimeError(
+                    "Refusing to replace a different existing audiveris command."
+                ) from exc
+            if WRAPPER_MARKER not in existing:
+                raise RuntimeError(
+                    "Refusing to replace a different existing audiveris command."
+                )
+        else:
+            raise RuntimeError(
+                "Refusing to replace a different existing audiveris command."
+            )
+
+    wrapper = (
+        "#!/bin/sh\n"
+        f"{WRAPPER_MARKER}\n"
+        ': "${GDK_SCALE:=1}"\n'
+        "export GDK_SCALE\n"
+        f'exec "{launcher}" "$@"\n'
+    )
+    alias.write_text(wrapper, encoding="utf-8")
+    alias.chmod(0o755)
 
 
 def main() -> None:
