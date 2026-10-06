@@ -247,9 +247,10 @@ const pendingMusicXml = new Map<string, Promise<void>>();
 
 function trackMusicXmlConversion(id: string, promise: Promise<void>): void {
   pendingMusicXml.set(id, promise);
-  void promise.finally(() => {
+  const cleanup = () => {
     if (pendingMusicXml.get(id) === promise) pendingMusicXml.delete(id);
-  });
+  };
+  void promise.then(cleanup, cleanup);
 }
 
 export const useAppStore = create<AppState>((set, get) => {
