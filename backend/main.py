@@ -72,7 +72,7 @@ def _startup_checks() -> None:
     """Log warnings for optional external binaries that are absent at launch."""
     # M1: fail fast if auth is explicitly required but no key is configured
     if os.environ.get("REQUIRE_AUTH", "").strip().lower() in ("1", "true", "yes"):
-        if not os.environ.get("BACKEND_API_KEY"):
+        if not (os.environ.get("BACKEND_API_KEY") or "").strip():
             raise SystemExit(
                 "FATAL: REQUIRE_AUTH is set but BACKEND_API_KEY is empty. "
                 "Set BACKEND_API_KEY or unset REQUIRE_AUTH."
