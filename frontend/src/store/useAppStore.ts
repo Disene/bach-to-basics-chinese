@@ -301,7 +301,7 @@ export const useAppStore = create<AppState>((set, get) => {
         await syncEngine.loadDocument(doc);
 
         // Request MusicXML from backend (non-blocking), using the copy
-        fetchMusicXml(bufferForXml, doc, id).catch(console.warn);
+        fetchMusicXml(bufferForXml, doc, id).catch((err) => set({ loadError: `MIDI 转乐谱失败：${String(err)}` }));
       } catch (err) {
         set({ loadError: String(err) });
       } finally {
@@ -363,7 +363,7 @@ export const useAppStore = create<AppState>((set, get) => {
         const filenameForBackend = file.name.toLowerCase().endsWith(".mxl")
           ? file.name.replace(/\.mxl$/i, ".xml")
           : file.name;
-        fetchMidiFromXml(xmlBytesForBackend, filenameForBackend, doc, id).catch(console.warn);
+        fetchMidiFromXml(xmlBytesForBackend, filenameForBackend, doc, id).catch((err) => set({ loadError: `MusicXML 转 MIDI 失败：${String(err)}` }));
       } catch (err) {
         set({ loadError: String(err) });
       } finally {
@@ -477,7 +477,7 @@ export const useAppStore = create<AppState>((set, get) => {
 
         // Kick off MusicXML transcription so the sheet-music view eventually
         // populates, mirroring loadMidiFile's pattern. Fire-and-forget.
-        fetchMusicXml(bufferForDoc.slice(0), doc, id).catch(console.warn);
+        fetchMusicXml(bufferForDoc.slice(0), doc, id).catch((err) => set({ loadError: `MIDI 转乐谱失败：${String(err)}` }));
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         set({ loadError: msg });
@@ -747,7 +747,7 @@ export const useAppStore = create<AppState>((set, get) => {
       if ("handVolume" in patch && patch.handVolume !== undefined)
         syncEngine.setHandVolume(patch.handVolume);
       if ("instrument" in patch && patch.instrument !== undefined)
-        syncEngine.setInstrument(patch.instrument).catch(console.warn);
+        syncEngine.setInstrument(patch.instrument).catch((err) => set({ loadError: `音色加载失败：${String(err)}` }));
       if ("waitForHand" in patch && patch.waitForHand !== undefined)
         syncEngine.setWaitForHand(patch.waitForHand);
       if ("renderOffset" in patch && patch.renderOffset !== undefined)
@@ -774,7 +774,7 @@ export const useAppStore = create<AppState>((set, get) => {
       syncEngine.setActiveHands(DEFAULT_SETTINGS.activeHands);
       syncEngine.setHandVolume(DEFAULT_SETTINGS.handVolume);
       syncEngine.setWaitForHand(DEFAULT_SETTINGS.waitForHand);
-      syncEngine.setInstrument(DEFAULT_SETTINGS.instrument).catch(console.warn);
+      syncEngine.setInstrument(DEFAULT_SETTINGS.instrument).catch((err) => set({ loadError: `音色加载失败：${String(err)}` }));
       syncEngine.setRenderOffset(DEFAULT_SETTINGS.renderOffset);
     },
 
