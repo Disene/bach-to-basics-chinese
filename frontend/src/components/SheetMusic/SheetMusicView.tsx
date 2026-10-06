@@ -36,7 +36,8 @@ export function SheetMusicView() {
     if (!containerRef.current) return;
     let cleanupBus: (() => void) | null = null;
 
-    import("@coderline/alphatab").then(({ AlphaTabApi }) => {
+    void import("@coderline/alphatab")
+      .then(({ AlphaTabApi }) => {
       if (!containerRef.current) return;
 
       // In the "all" view the sheet sits in a full-width band at the top and
@@ -237,7 +238,13 @@ export function SheetMusicView() {
 
       bus.on("transport:tick", onTick as never);
       cleanupBus = () => bus.off("transport:tick", onTick as never);
-    });
+      })
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        useAppStore.setState({
+          loadError: `乐谱组件加载失败：${message}。如果刚刚更新了应用，请刷新页面后重试。`,
+        });
+      });
 
     return () => {
       cleanupBus?.();
