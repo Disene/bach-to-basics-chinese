@@ -36,7 +36,8 @@ export function SheetMusicView() {
     if (!containerRef.current) return;
     let cleanupBus: (() => void) | null = null;
 
-    import("@coderline/alphatab").then(({ AlphaTabApi }) => {
+    void import("@coderline/alphatab")
+      .then(({ AlphaTabApi }) => {
       if (!containerRef.current) return;
 
       // In the "all" view the sheet sits in a full-width band at the top and
@@ -48,7 +49,12 @@ export function SheetMusicView() {
       const horizontal = useAppStore.getState().settings.layoutMode === "all";
 
       const api = new AlphaTabApi(containerRef.current, {
-        core: { engine: "svg", enableLazyLoading: false, logLevel: 0 },
+        core: {
+          engine: "svg",
+          enableLazyLoading: false,
+          logLevel: 0,
+          fontDirectory: "/font/",
+        },
         display: {
           layoutMode: horizontal ? 1 : 0, // 1 = horizontal strip, 0 = page (vertical)
           // Smaller scale in the horizontal "all" band so the full grand staff
@@ -59,7 +65,9 @@ export function SheetMusicView() {
           // a printed score).  A very small value (0.1) avoids a ragged right
           // edge on the last system without visibly compressing the spacing.
           stretchForce: 0.1,
-          staveProfile: 0,
+          // This app is piano-only: always render standard notation instead of
+          // relying on alphaTab's auto-detected stave profile.
+          staveProfile: 2,
         },
         player: {
           // enablePlayer: true is required for cursor/highlight rendering.
@@ -86,22 +94,53 @@ export function SheetMusicView() {
         /* ignore */
       }
 
-      // ── Mark score as rendered so cursor/scroll can activate ─────────────
+      // ── Surface alphaTab's async errors instead of leaving a blank pane ─
+      // alphaTab reports importer/renderer failures through this event rather
+      // than throwing from api.load().
       try {
-        api.scoreLoaded.on(() => {
-          scoreLoaded.current = true;
+        api.error.on((error: Error) => {
+          const message = error?.message || String(error);
+          useAppStore.setState({ loadError: `乐谱组件错误：${message}` });
         });
       } catch {
         /* ignore */
       }
 
+      // ── Mark score as loaded + render every imported track ───────────────
+      // MusicXML produced by music21 may contain separate treble/bass tracks.
+      // alphaTab defaults to the first track if none are specified, so expand
+      // multi-track scores once after import.
+      const expandedScores = new WeakSet<object>();
+      try {
+        api.scoreLoaded.on((score) => {
+          scoreLoaded.current = true;
+          const tracks = score.tracks;
+          if (tracks.length > 1 && !expandedScores.has(score)) {
+            expandedScores.add(score);
+            api.renderTracks(tracks);
+          }
+        });
+      } catch {
+        /* ignore */
+      }
+
+      const loadScoreData = (data: Uint8Array) => {
+        scoreLoaded.current = false;
+        const accepted = api.load(data);
+        if (!accepted) {
+          useAppStore.setState({
+            loadError: "乐谱组件无法识别当前 MusicXML 数据。",
+          });
+        }
+      };
+
       // ── Load score if MusicXML is already available ──────────────────────
       const initialDoc = useAppStore.getState().document;
       if (initialDoc?.musicXml) {
-        api.load(new TextEncoder().encode(sanitizeMusicXml(initialDoc.musicXml)));
+        loadScoreData(new TextEncoder().encode(sanitizeMusicXml(initialDoc.musicXml)));
       } else if (initialDoc?.mxlBuffer) {
         // .mxl is ZIP-compressed MusicXML; AlphaTab handles it natively
-        api.load(new Uint8Array(initialDoc.mxlBuffer));
+        loadScoreData(new Uint8Array(initialDoc.mxlBuffer));
       }
 
       // ── Click note to play sound ─────────────────────────────────────────
@@ -199,7 +238,13 @@ export function SheetMusicView() {
 
       bus.on("transport:tick", onTick as never);
       cleanupBus = () => bus.off("transport:tick", onTick as never);
-    });
+      })
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        useAppStore.setState({
+          loadError: `乐谱组件加载失败：${message}。如果刚刚更新了应用，请刷新页面后重试。`,
+        });
+      });
 
     return () => {
       cleanupBus?.();
@@ -259,11 +304,19 @@ export function SheetMusicView() {
     }
     if (doc?.musicXml) {
       scoreLoaded.current = false;
-      apiRef.current.load(new TextEncoder().encode(sanitizeMusicXml(doc.musicXml)));
+      const accepted = apiRef.current.load(
+        new TextEncoder().encode(sanitizeMusicXml(doc.musicXml))
+      );
+      if (!accepted) {
+        useAppStore.setState({ loadError: "乐谱组件无法识别当前 MusicXML 数据。" });
+      }
     } else if (doc?.mxlBuffer) {
       // .mxl is ZIP-compressed MusicXML; AlphaTab handles it natively
       scoreLoaded.current = false;
-      apiRef.current.load(new Uint8Array(doc.mxlBuffer));
+      const accepted = apiRef.current.load(new Uint8Array(doc.mxlBuffer));
+      if (!accepted) {
+        useAppStore.setState({ loadError: "乐谱组件无法识别当前 .mxl 数据。" });
+      }
     }
   }, [doc?.musicXml, doc?.mxlBuffer]);
 

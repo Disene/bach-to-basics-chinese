@@ -3,6 +3,7 @@ import { syncEngine } from "../engine/SyncEngine";
 import bus from "../engine/EventBus";
 import type { MusicDocument, PlaybackStatus, NoteEvent, Finger } from "@bach-to-basics/shared";
 import type { InstrumentId } from "../engine/AudioEngine";
+import { applyFingeringMarks, type FingeringMark } from "../utils/fingeringMapping";
 export { computeMeasureSeconds, keySignatureToLabel } from "@bach-to-basics/shared";
 export type { InstrumentId } from "../engine/AudioEngine";
 export { INSTRUMENT_LABELS } from "../engine/AudioEngine";
@@ -137,6 +138,8 @@ export interface AppState {
   // ── MIDI device ──────────────────────────────────────────────────────────
   midiDeviceName: string | null;
   midiEnabled: boolean;
+  /** Real-time CC64 state from the connected MIDI device. */
+  sustainPedalDown: boolean;
 
   // ── Actions ──────────────────────────────────────────────────────────────
   loadMidiFile: (file: File) => Promise<void>;
@@ -239,6 +242,19 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showSustainedNotes: false,
 };
 
+// MIDI/audio imports create MusicXML in the background. Keep the in-flight
+// promise by document id so features such as auto-fingering can wait for the
+// same conversion instead of racing it or issuing a duplicate request.
+const pendingMusicXml = new Map<string, Promise<void>>();
+
+function trackMusicXmlConversion(id: string, promise: Promise<void>): void {
+  pendingMusicXml.set(id, promise);
+  const cleanup = () => {
+    if (pendingMusicXml.get(id) === promise) pendingMusicXml.delete(id);
+  };
+  void promise.then(cleanup, cleanup);
+}
+
 export const useAppStore = create<AppState>((set, get) => {
   // Subscribe to SyncEngine state changes --> push into Zustand
   syncEngine.onStateChange((s) => {
@@ -249,6 +265,7 @@ export const useAppStore = create<AppState>((set, get) => {
       loopStart: s.loopStart,
       loopEnd: s.loopEnd,
       waitMode: s.waitMode,
+      sustainPedalDown: s.sustainPedalDown,
     });
   });
 
@@ -280,6 +297,7 @@ export const useAppStore = create<AppState>((set, get) => {
     settings: DEFAULT_SETTINGS,
     midiDeviceName: null,
     midiEnabled: false,
+    sustainPedalDown: false,
 
     loadMidiFile: async (file: File) => {
       set({ isLoadingDocument: true, loadError: null });
@@ -299,8 +317,14 @@ export const useAppStore = create<AppState>((set, get) => {
         set({ document: doc });
         await syncEngine.loadDocument(doc);
 
-        // Request MusicXML from backend (non-blocking), using the copy
-        fetchMusicXml(bufferForXml, doc, id).catch(console.warn);
+        // Request MusicXML from backend in the background. Track the promise so
+        // auto-fingering can wait for the same conversion if the user enables
+        // fingering immediately after import.
+        const musicXmlPromise = fetchMusicXml(bufferForXml, doc, id);
+        trackMusicXmlConversion(id, musicXmlPromise);
+        musicXmlPromise.catch((err) =>
+          set({ loadError: `MIDI 转乐谱失败：${String(err)}` })
+        );
       } catch (err) {
         set({ loadError: String(err) });
       } finally {
@@ -362,7 +386,7 @@ export const useAppStore = create<AppState>((set, get) => {
         const filenameForBackend = file.name.toLowerCase().endsWith(".mxl")
           ? file.name.replace(/\.mxl$/i, ".xml")
           : file.name;
-        fetchMidiFromXml(xmlBytesForBackend, filenameForBackend, doc, id).catch(console.warn);
+        fetchMidiFromXml(xmlBytesForBackend, filenameForBackend, doc, id).catch((err) => set({ loadError: `MusicXML 转 MIDI 失败：${String(err)}` }));
       } catch (err) {
         set({ loadError: String(err) });
       } finally {
@@ -476,7 +500,11 @@ export const useAppStore = create<AppState>((set, get) => {
 
         // Kick off MusicXML transcription so the sheet-music view eventually
         // populates, mirroring loadMidiFile's pattern. Fire-and-forget.
-        fetchMusicXml(bufferForDoc.slice(0), doc, id).catch(console.warn);
+        const musicXmlPromise = fetchMusicXml(bufferForDoc.slice(0), doc, id);
+        trackMusicXmlConversion(id, musicXmlPromise);
+        musicXmlPromise.catch((err) =>
+          set({ loadError: `MIDI 转乐谱失败：${String(err)}` })
+        );
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         set({ loadError: msg });
@@ -486,11 +514,30 @@ export const useAppStore = create<AppState>((set, get) => {
     },
 
     generateFingering: async () => {
-      const { document: doc } = get();
-      if (!doc?.musicXml) return;
+      let { document: doc } = get();
+      if (!doc) return;
 
       set({ isGeneratingFingering: true, loadError: null });
       try {
+        // MIDI/audio imports create MusicXML asynchronously. If the user enables
+        // fingering before that conversion completes, wait for the existing job
+        // instead of failing early or requiring a second manual click.
+        if (!doc.musicXml) {
+          const pending = pendingMusicXml.get(doc.id);
+          if (pending) await pending;
+
+          const latestDoc = get().document;
+          if (!latestDoc || latestDoc.id !== doc.id) return;
+          doc = latestDoc;
+        }
+
+        if (!doc.musicXml) {
+          throw new Error("当前曲目还没有可用于生成指法的 MusicXML 数据。");
+        }
+        if (doc.notes.length === 0) {
+          throw new Error("音符数据仍在准备中，请稍后再生成指法。");
+        }
+
         const res = await fetch("/api/fingering/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -503,12 +550,17 @@ export const useAppStore = create<AppState>((set, get) => {
         const { musicxml: annotatedXml } = (await res.json()) as { musicxml: string };
 
         const updatedNotes = applyFingeringFromXml(doc.notes, annotatedXml);
+        const fingeringCount = updatedNotes.reduce(
+          (count, note) => count + (note.finger !== null ? 1 : 0),
+          0
+        );
+        if (fingeringCount === 0) {
+          throw new Error("指法生成完成，但没有匹配到可显示的指法编号。");
+        }
 
         // Guard: don't overwrite if the user loaded a different document while we waited
         const { document: currentDoc } = get();
         if (currentDoc?.id === doc.id) {
-          // Note: we deliberately do NOT replace `musicXml` with the annotated
-          // version - fingerings are a piano-keyboard-only overlay.
           const updatedDoc = {
             ...currentDoc,
             notes: updatedNotes,
@@ -518,14 +570,15 @@ export const useAppStore = create<AppState>((set, get) => {
             document: updatedDoc,
             settings: { ...s.settings, showFingering: true },
           }));
-          // Hand SyncEngine the updated notes WITHOUT resetting playback -
-          // notes already scheduled within the lookahead window keep their
-          // old (no-finger) values, but everything beyond it picks up the
-          // new fingerings. This lets the user keep playing through Generate.
+
+          // Replace the engine's note data and rebuild pending scheduling from
+          // the current position so short pieces and the 5-second lookahead
+          // immediately pick up the newly generated finger numbers.
           syncEngine.updateDocumentNotes(updatedNotes);
+          syncEngine.seek(syncEngine.state.currentSeconds);
         }
       } catch (err) {
-        set({ loadError: String(err) });
+        set({ loadError: err instanceof Error ? err.message : String(err) });
       } finally {
         set({ isGeneratingFingering: false });
       }
@@ -733,7 +786,7 @@ export const useAppStore = create<AppState>((set, get) => {
       if ("handVolume" in patch && patch.handVolume !== undefined)
         syncEngine.setHandVolume(patch.handVolume);
       if ("instrument" in patch && patch.instrument !== undefined)
-        syncEngine.setInstrument(patch.instrument).catch(console.warn);
+        syncEngine.setInstrument(patch.instrument).catch((err) => set({ loadError: `音色加载失败：${String(err)}` }));
       if ("waitForHand" in patch && patch.waitForHand !== undefined)
         syncEngine.setWaitForHand(patch.waitForHand);
       if ("renderOffset" in patch && patch.renderOffset !== undefined)
@@ -760,7 +813,7 @@ export const useAppStore = create<AppState>((set, get) => {
       syncEngine.setActiveHands(DEFAULT_SETTINGS.activeHands);
       syncEngine.setHandVolume(DEFAULT_SETTINGS.handVolume);
       syncEngine.setWaitForHand(DEFAULT_SETTINGS.waitForHand);
-      syncEngine.setInstrument(DEFAULT_SETTINGS.instrument).catch(console.warn);
+      syncEngine.setInstrument(DEFAULT_SETTINGS.instrument).catch((err) => set({ loadError: `音色加载失败：${String(err)}` }));
       syncEngine.setRenderOffset(DEFAULT_SETTINGS.renderOffset);
     },
 
@@ -793,7 +846,7 @@ function parseMidiInWorker(buffer: ArrayBuffer, id: string, title: string): Prom
     // M3 - kill the worker if it hangs (e.g. malformed MIDI, infinite loop)
     const timeout = setTimeout(() => {
       worker.terminate();
-      reject(new Error("MIDI parsing timed out"));
+      reject(new Error("MIDI 解析超时，请尝试更简单或更小的文件。"));
     }, 30_000);
 
     worker.onmessage = (e) => {
@@ -862,18 +915,8 @@ function xmlStepToMidi(step: string, octave: number, alter: number): number {
 }
 
 /**
- * Parse fingering annotations from an annotated MusicXML string (returned by
- * /fingering/generate) and splice them into the existing NoteEvent array.
- *
- * Strategy: piano scores from music21 typically have ONE <part> with two
- * <staff> elements (staff 1 = treble = right, staff 2 = bass = left). We
- * bucket fingerings by per-note <staff>; for parts with no staff info we
- * fall back to the part's average MIDI pitch (≥60 → right). Then we match
- * by position index within each hand group: the i-th XML right-hand note
- * → the i-th NoteEvent whose `hand === "right"`.
- *
- * Pianoplayer encodes "anchored" fingers as circled glyphs (①-⑤); we
- * normalize those to plain digits.
+ * Pianoplayer encodes pre-existing "anchor" fingerings as circled glyphs
+ * (①-⑤); normalize them to the same numeric Finger type as generated marks.
  */
 const CIRCLED_FINGER_TO_DIGIT: Record<string, string> = {
   "①": "1",
@@ -883,21 +926,25 @@ const CIRCLED_FINGER_TO_DIGIT: Record<string, string> = {
   "⑤": "5",
 };
 
+/**
+ * Parse pianoplayer fingering annotations from MusicXML, then map them onto the
+ * already-loaded MIDI notes. The parser ignores tied continuation notes because
+ * MIDI normally represents the whole tie as one sustained NoteEvent.
+ */
 function applyFingeringFromXml(notes: NoteEvent[], annotatedXml: string): NoteEvent[] {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(annotatedXml, "application/xml");
+  if (xmlDoc.querySelector("parsererror")) return notes.map((note) => ({ ...note }));
 
-  // Collect finger numbers per hand, in document order
-  const fingersByHand: Record<"left" | "right", (Finger | null)[]> = { left: [], right: [] };
-
+  const marks: FingeringMark[] = [];
   const parts = Array.from(xmlDoc.querySelectorAll("part"));
+
   for (const part of parts) {
     const noteEls = Array.from(part.querySelectorAll("note"));
-
-    // First pass: do these notes carry <staff> info? (typical for piano grand-staff)
     let hasStaff = false;
-    let pitchSum = 0,
-      pitchCount = 0;
+    let pitchSum = 0;
+    let pitchCount = 0;
+
     for (const el of noteEls) {
       if (el.querySelector("rest")) continue;
       if (el.querySelector("staff")) hasStaff = true;
@@ -909,18 +956,27 @@ function applyFingeringFromXml(notes: NoteEvent[], annotatedXml: string): NoteEv
         pitchCount++;
       }
     }
+
     const fallbackHand: "left" | "right" =
       (pitchCount > 0 ? pitchSum / pitchCount : 60) >= 60 ? "right" : "left";
 
-    // Second pass: bucket fingerings into the correct hand
     for (const el of noteEls) {
       if (el.querySelector("rest")) continue;
 
-      // Determine hand: prefer <staff> (1 = right/treble, 2 = left/bass), else fallback
-      let handKey: "left" | "right" = fallbackHand;
+      const tieTypes = Array.from(el.querySelectorAll("tie, tied"))
+        .map((tie) => tie.getAttribute("type") ?? "");
+      if (tieTypes.some((type) => type === "stop" || type === "continue")) continue;
+
+      const step = el.querySelector("pitch > step")?.textContent ?? "";
+      if (!step) continue;
+      const octave = Number(el.querySelector("pitch > octave")?.textContent ?? 0);
+      const alter = Number(el.querySelector("pitch > alter")?.textContent ?? 0);
+      const midi = xmlStepToMidi(step, octave, alter);
+
+      let hand: "left" | "right" = fallbackHand;
       if (hasStaff) {
         const staff = Number(el.querySelector("staff")?.textContent ?? 1);
-        handKey = staff === 2 ? "left" : "right";
+        hand = staff === 2 ? "left" : "right";
       }
 
       const fingeringEl =
@@ -931,29 +987,12 @@ function applyFingeringFromXml(notes: NoteEvent[], annotatedXml: string): NoteEv
       const finger: Finger | null = /^[1-5]$/.test(normalized)
         ? (Number(normalized) as Finger)
         : null;
-      fingersByHand[handKey].push(finger);
+
+      marks.push({ midi, hand, finger });
     }
   }
 
-  // Collect per-hand NoteEvent indices (already sorted by startSeconds in the flat array)
-  const idxByHand: Record<"left" | "right" | "unknown", number[]> = {
-    left: [],
-    right: [],
-    unknown: [],
-  };
-  notes.forEach((note, idx) => idxByHand[note.hand].push(idx));
-
-  // Splice in fingerings by index
-  const updated = notes.map((n) => ({ ...n }));
-  for (const hand of ["left", "right"] as const) {
-    const eventIdxs = idxByHand[hand];
-    const fingers = fingersByHand[hand];
-    const count = Math.min(eventIdxs.length, fingers.length);
-    for (let i = 0; i < count; i++) {
-      updated[eventIdxs[i]] = { ...updated[eventIdxs[i]], finger: fingers[i] };
-    }
-  }
-  return updated;
+  return applyFingeringMarks(notes, marks);
 }
 
 async function fetchMidiFromXml(
@@ -966,8 +1005,26 @@ async function fetchMidiFromXml(
   const form = new FormData();
   form.append("file", blob, filename);
 
-  const res = await fetch("/api/transcribe/musicxml2midi", { method: "POST", body: form });
-  if (!res.ok) return;
+  let res: Response;
+  try {
+    res = await fetch("/api/transcribe/musicxml2midi", { method: "POST", body: form });
+  } catch (err) {
+    const { document: currentDoc } = useAppStore.getState();
+    if (currentDoc?.id === id) {
+      useAppStore.setState({ loadError: `MusicXML 转 MIDI 失败：${String(err)}` });
+    }
+    return;
+  }
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { detail?: string };
+    const { document: currentDoc } = useAppStore.getState();
+    if (currentDoc?.id === id) {
+      useAppStore.setState({
+        loadError: body.detail ?? `MusicXML 转 MIDI 失败（服务器错误 ${res.status}）`,
+      });
+    }
+    return;
+  }
 
   const midiBuffer = await res.arrayBuffer();
   const bufferForDoc = midiBuffer.slice(0);
@@ -1003,24 +1060,43 @@ async function fetchMidiFromXml(
   }
 }
 
-async function fetchMusicXml(buffer: ArrayBuffer, doc: MusicDocument, _id: string): Promise<void> {
+async function fetchMusicXml(buffer: ArrayBuffer, doc: MusicDocument, id: string): Promise<void> {
   const blob = new Blob([buffer], { type: "audio/midi" });
   const form = new FormData();
   form.append("file", blob, "track.mid");
 
   const titleParam = encodeURIComponent(doc.title ?? "");
-  const res = await fetch(`/api/transcribe/midi2musicxml?title=${titleParam}`, {
-    method: "POST",
-    body: form,
-  });
-  if (!res.ok) return;
+  let res: Response;
+  try {
+    res = await fetch(`/api/transcribe/midi2musicxml?title=${titleParam}`, {
+      method: "POST",
+      body: form,
+    });
+  } catch (err) {
+    const { document: currentDoc } = useAppStore.getState();
+    if (currentDoc?.id === id) {
+      useAppStore.setState({ loadError: `MIDI 转乐谱失败：${String(err)}` });
+    }
+    return;
+  }
+
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { detail?: string };
+    const { document: currentDoc } = useAppStore.getState();
+    if (currentDoc?.id === id) {
+      useAppStore.setState({
+        loadError: body.detail ?? `MIDI 转乐谱失败（服务器错误 ${res.status}）`,
+      });
+    }
+    return;
+  }
 
   const { musicxml } = (await res.json()) as { musicxml: string };
-  doc.musicXml = musicxml;
 
-  // Notify sheet view that MusicXML is now available
+  // Merge MusicXML into the latest document snapshot. The conversion is
+  // asynchronous, so the original `doc` argument may already be stale.
   const { document: currentDoc } = useAppStore.getState();
-  if (currentDoc?.id === doc.id) {
-    useAppStore.setState({ document: { ...doc } });
+  if (currentDoc?.id === id) {
+    useAppStore.setState({ document: { ...currentDoc, musicXml: musicxml } });
   }
 }

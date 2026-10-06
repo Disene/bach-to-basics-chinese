@@ -2,7 +2,7 @@
 # Multi-stage build: pnpm build, static files served by nginx with /api proxy
 
 # ── Stage 1: build ──────────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@9 --activate
 

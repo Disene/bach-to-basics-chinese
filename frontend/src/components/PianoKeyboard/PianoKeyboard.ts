@@ -545,7 +545,7 @@ export class PianoKeyboard {
       label.visible = text.length > 0;
     }
     // Redraw any currently-active keys so color changes take effect immediately
-    if ("customColors" in opts || "showHandColors" in opts) {
+    if ("customColors" in opts || "showHandColors" in opts || "showFingering" in opts) {
       for (const [midi, state] of this.keyStates) {
         if (state.playbackActive || state.inputActive) this.redrawKey(midi);
       }

@@ -77,11 +77,13 @@ function Toggle({
   active,
   onClick,
   title,
+  disabled = false,
   "aria-label": ariaLabel,
 }: {
   active: boolean;
   onClick: () => void;
   title?: string;
+  disabled?: boolean;
   "aria-label"?: string;
 }) {
   const rowLabel = useContext(RowLabelContext);
@@ -92,10 +94,12 @@ function Toggle({
       aria-label={ariaLabel ?? rowLabel ?? title}
       onClick={onClick}
       title={title}
+      disabled={disabled}
       style={{
         display: "inline-flex",
         alignItems: "center",
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.45 : 1,
         flexShrink: 0,
         border: "none",
         background: "transparent",
@@ -228,12 +232,14 @@ function BtnGroup<T extends string | number>({
   value,
   onChange,
   fullWidth = false,
+  columns,
   "aria-label": ariaLabel,
 }: {
   options: { value: T; label: string; title?: string }[];
   value: T;
   onChange: (v: T) => void;
   fullWidth?: boolean;
+  columns?: number;
   "aria-label"?: string;
 }) {
   return (
@@ -241,8 +247,9 @@ function BtnGroup<T extends string | number>({
       role="radiogroup"
       aria-label={ariaLabel}
       style={{
-        display: fullWidth ? "flex" : "inline-flex",
-        width: fullWidth ? "100%" : undefined,
+        display: columns ? "grid" : fullWidth ? "flex" : "inline-flex",
+        gridTemplateColumns: columns ? `repeat(${columns}, minmax(0, 1fr))` : undefined,
+        width: fullWidth || columns ? "100%" : undefined,
         padding: 3,
         background: "var(--color-surface-2)",
         borderRadius: 8,
@@ -261,19 +268,22 @@ function BtnGroup<T extends string | number>({
             onClick={() => onChange(opt.value)}
             title={opt.title}
             style={{
-              padding: "3px 10px",
+              padding: columns ? "5px 7px" : "3px 10px",
               borderRadius: 5,
               border: "none",
               background: active ? "var(--color-accent)" : "transparent",
               color: active ? "#fff" : "var(--color-text-muted)",
-              fontSize: 12,
+              fontSize: columns ? 11.5 : 12,
               fontWeight: active ? 600 : 400,
               cursor: "pointer",
               fontFamily: "inherit",
               transition: "all 0.12s",
-              flexShrink: fullWidth ? 0 : 0,
-              flex: fullWidth ? 1 : undefined,
+              flexShrink: 0,
+              flex: columns ? undefined : fullWidth ? 1 : undefined,
+              minWidth: 0,
               whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             {opt.label}
@@ -455,6 +465,21 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
     } else {
       updateSettings({ colorTheme: t });
     }
+  };
+
+  const hasFingering = !!doc?.notes.some((note) => note.finger !== null);
+  const sustainRangeCount = doc?.sustainRanges?.length ?? 0;
+  const toggleFingering = () => {
+    if (isGeneratingFingering) return;
+    if (settings.showFingering) {
+      updateSettings({ showFingering: false });
+      return;
+    }
+    if (hasFingering) {
+      updateSettings({ showFingering: true });
+      return;
+    }
+    void generateFingering();
   };
 
   return (
@@ -1095,14 +1120,16 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
               sublabel="在钢琴键盘上显示 1–5 指法"
               title="在钢琴键盘上显示指法编号提示"
             >
-              {doc?.musicXml && (
+              {doc && (
                 <button
                   onClick={() => void generateFingering()}
-                  disabled={isGeneratingFingering}
+                  disabled={isGeneratingFingering || !doc.notes.length}
                   title={
-                    doc.fingeringVersion !== "none"
-                      ? "使用 Parncutt 算法优化指法编号。现有指法会保留为锚点，算法只补全空缺，适合 Henle 等仅在难点标注指法的编辑版乐谱。"
-                      : "使用 Parncutt 算法生成指法编号提示"
+                    !doc.musicXml
+                      ? "正在准备乐谱数据；点击后会在准备完成后自动生成指法"
+                      : doc.fingeringVersion !== "none"
+                        ? "使用 Parncutt 算法优化指法编号。现有指法会保留为锚点，算法只补全空缺，适合 Henle 等仅在难点标注指法的编辑版乐谱。"
+                        : "使用 Parncutt 算法生成指法编号提示"
                   }
                   style={{
                     fontSize: 11,
@@ -1113,22 +1140,29 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                     color: isGeneratingFingering
                       ? "var(--color-text-muted)"
                       : "var(--color-accent)",
-                    cursor: isGeneratingFingering ? "wait" : "pointer",
+                    cursor: isGeneratingFingering || !doc.notes.length ? "wait" : "pointer",
                     whiteSpace: "nowrap",
                     flexShrink: 0,
-                    opacity: isGeneratingFingering ? 0.6 : 1,
+                    opacity: isGeneratingFingering || !doc.notes.length ? 0.6 : 1,
                   }}
                 >
                   {isGeneratingFingering
-                    ? "Generating…"
-                    : doc.fingeringVersion !== "none"
-                      ? "Regenerate"
-                      : "Generate"}
+                    ? "正在生成…"
+                    : !doc.notes.length
+                      ? "准备中…"
+                      : doc.fingeringVersion !== "none"
+                        ? "重新生成"
+                        : "生成"}
                 </button>
               )}
               <Toggle
                 active={settings.showFingering}
-                onClick={() => updateSettings({ showFingering: !settings.showFingering })}
+                onClick={toggleFingering}
+                title={
+                  hasFingering
+                    ? "显示或隐藏指法编号"
+                    : "尚无指法数据，开启时会自动生成"
+                }
               />
             </Row>
 
@@ -1170,23 +1204,33 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="延音踏板"
-              sublabel="用阴影区域显示 CC64 踏板范围"
-              title="在瀑布流视图中用半透明区域显示延音踏板（CC64）的踩下与松开区间"
+              label="乐曲踏板标记"
+              sublabel={
+                sustainRangeCount > 0
+                  ? `检测到 ${sustainRangeCount} 段 CC64 踩踏`
+                  : "当前乐曲未检测到 CC64 踏板数据"
+              }
+              title="在瀑布流中显示 MIDI 文件自带的延音踏板（CC64）踩下/抬起标记"
             >
               <Toggle
                 active={settings.showSustainPedal}
+                disabled={sustainRangeCount === 0}
                 onClick={() => updateSettings({ showSustainPedal: !settings.showSustainPedal })}
               />
             </Row>
 
             <Row
-              label="延音残影"
-              sublabel="踏板保持时在键盘上显示残影"
-              title="延音踏板仍踩下时，为已结束的音符保留淡化残影"
+              label="乐曲延音残影"
+              sublabel={
+                sustainRangeCount > 0
+                  ? "按文件 CC64 显示延音持续效果"
+                  : "当前乐曲未检测到 CC64 踏板数据"
+              }
+              title="根据 MIDI 文件中的 CC64，在瀑布流触键线附近显示仍在延音的音符残影"
             >
               <Toggle
                 active={settings.showSustainedNotes}
+                disabled={sustainRangeCount === 0}
                 onClick={() => updateSettings({ showSustainedNotes: !settings.showSustainedNotes })}
               />
             </Row>
@@ -1383,7 +1427,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                 options={INSTRUMENT_OPTIONS}
                 value={settings.instrument}
                 onChange={(v) => updateSettings({ instrument: v as InstrumentId })}
-                fullWidth
+                columns={3}
               />
             </Row>
 

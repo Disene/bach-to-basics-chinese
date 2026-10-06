@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/gigliof/bach-to-basics">
+  <a href="https://github.com/Disene/bach-to-basics-chinese">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="docs/logo-dark-mode.png">
       <img alt="Bach to Basics" src="docs/logo.png" width="340">
@@ -8,11 +8,74 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gigliof/bach-to-basics/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/gigliof/bach-to-basics/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://github.com/gigliof/bach-to-basics/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-7c3aed"></a>
-  <a href="https://github.com/gigliof/bach-to-basics/issues"><img alt="Issues" src="https://img.shields.io/github/issues/gigliof/bach-to-basics"></a>
-  <a href="https://ko-fi.com/gigliof"><img alt="Support on Ko-fi" src="https://img.shields.io/badge/support-ko--fi-FF5E5B?logo=ko-fi&logoColor=white"></a>
+  <a href="#简体中文-fork">简体中文</a> ·
+  <a href="#upstream-project-documentation">English</a>
 </p>
+
+<p align="center">
+  <a href="https://github.com/Disene/bach-to-basics-chinese/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-7c3aed"></a>
+  <a href="https://github.com/Disene/bach-to-basics-chinese/issues"><img alt="Issues" src="https://img.shields.io/github/issues/Disene/bach-to-basics-chinese"></a>
+  <a href="https://github.com/gigliof/bach-to-basics"><img alt="Upstream" src="https://img.shields.io/badge/upstream-gigliof%2Fbach--to--basics-64748b"></a>
+  <a href="https://ko-fi.com/gigliof"><img alt="Support upstream author on Ko-fi" src="https://img.shields.io/badge/support%20upstream-ko--fi-FF5E5B?logo=ko-fi&logoColor=white"></a>
+</p>
+
+## 简体中文 Fork
+
+这是 [gigliof/bach-to-basics](https://github.com/gigliof/bach-to-basics) 的简体中文 Fork，保留 MIT 许可和上游作者署名。
+
+当前 Fork 的目标不是另起一个平行产品，而是在尽量保持上游结构和可同步性的前提下，补齐中文界面、Docker 可复现部署，以及实际钢琴练习中发现的功能链路问题。
+
+> 当前应用界面以**简体中文为默认语言**。如需英文界面与英文原始说明，请使用上游项目 [gigliof/bach-to-basics](https://github.com/gigliof/bach-to-basics)。本 Fork 暂不引入运行时多语言切换，以减少与上游同步时的冲突和维护成本。
+
+### 本 Fork 已完成的主要改进
+
+- **简体中文本地化**：主界面、设置、导入/导出、MIDI、错误提示、PWA 元信息和常见后端错误。
+- **硬件 MIDI**：实体 MIDI 键盘可以直接发声，并参与等待模式判定。
+- **等待模式**：按实际音符 onset 暂停，支持和弦、移调和左右手等待。
+- **自动指法**：修复单轨 MIDI 映射、后台 MusicXML 异步竞态和短曲预读缓存问题。
+- **五线谱**：修复 alphaTab + Vite 生产构建集成、多轨钢琴谱渲染以及部署后旧 chunk 恢复。
+- **延音踏板**：支持实体 MIDI CC64 实时状态、真实延音；支持读取 MIDI 文件自带 CC64 作为播放和瀑布流提示。
+- **Docker**：固定 Node 22 / pnpm 9，前端端口可通过 `FRONTEND_PORT` 配置。
+
+### 当前人工验证状态
+
+| 功能 | 状态 |
+| --- | --- |
+| MIDI 导入 / 播放 / 瀑布流 | ✅ 已实测 |
+| 实体 MIDI 键盘发声 | ✅ 已实测 |
+| 等待模式 | ✅ 已实测 |
+| 自动指法生成 | ✅ 已实测 |
+| 五线谱渲染 | ✅ 已实测 |
+| 实体 CC64 踏板状态与实时延音 | ✅ 已实测 |
+| 音色切换与设置布局 | ✅ 已实测 |
+| MIDI 文件自带 CC64 播放/标记 | ✅ 已实测 |
+| GitHub Actions CI | ⚪ 当前未作为本 Fork 的验收依据 |
+
+### Docker 快速启动
+
+```bash
+cp .env.example .env
+# 如果 5173 被占用或被 Windows 保留，可在 .env 中设置：
+# FRONTEND_PORT=51722
+
+docker compose up -d --build
+```
+
+默认访问 `http://localhost:5173`；如果设置了 `FRONTEND_PORT=51722`，则访问 `http://localhost:51722`。
+
+> 建议始终固定使用 `localhost` 或 `127.0.0.1` 其中一个地址，不要交替使用；PWA / Service Worker 会把它们视为两个不同的 origin。
+
+### 可选能力与限制
+
+- PDF 导入依赖 **Audiveris**。
+- PDF 导出依赖 **LilyPond**。
+- 音频转 MIDI 依赖 **Basic Pitch**。
+- iOS Safari 不支持 Web MIDI，因此 iPhone/iPad 无法直接连接硬件 MIDI 键盘。
+- 公网部署请使用 HTTPS，并在应用外层增加访问控制 / SSO / 受控反向代理。内置浏览器 UI 不会自行发送 `X-API-Key`。
+
+---
+
+## Upstream project documentation
 
 A browser-based piano practice tool. Drop in a **MIDI file**, a **MusicXML score**, or even a **PDF of sheet music**. Bach to Basics turns it into synced views of falling notes, an interactive 88-key piano, and rendered sheet music, then layers on practice tools (A/B loop, speed trainer, wait mode, metronome, transpose) to help you learn the piece.
 
@@ -62,7 +125,7 @@ Drag-and-drop anywhere on the window, or use the import button.
 ### Audio & MIDI
 
 - **5 instrument options**: Splendid Grand Piano, Bright Acoustic, CP80 Electric, Harpsichord, Honky-Tonk (sampled, via [smplr](https://github.com/danigb/smplr))
-- **MIDI input** via Web MIDI: connect a hardware keyboard (Roland, Yamaha, etc.); your input lights up the on-screen keys and drives wait mode
+- **MIDI input** via Web MIDI: connect a hardware keyboard (Roland, Yamaha, etc.); input lights up the on-screen keys, drives wait mode, and supports live CC64 sustain-pedal state + audio sustain
 - **Tempo control**: 25%-200% with snap-back to 100%
 
 ### Export
@@ -104,7 +167,7 @@ docker compose up        # build the images on first run, then start
 open http://localhost:5173
 ```
 
-That's it. Stop with `Ctrl+C` (or `docker compose down`).
+That's it. Stop with `Ctrl+C` (or `docker compose down`). If port 5173 is unavailable, set `FRONTEND_PORT` in `.env` (for example `FRONTEND_PORT=51722`) and open that port instead.
 
 > Optional: copy `.env.example` to `.env` and set `BACKEND_API_KEY` if you want to require an API key on the backend.
 
@@ -112,7 +175,7 @@ That's it. Stop with `Ctrl+C` (or `docker compose down`).
 
 You'll need:
 
-- **Node.js** 22+ and **pnpm** (`npm i -g pnpm`)
+- **Node.js** 22+ and **pnpm 9** (`npm i -g pnpm@9`)
 - **Python** 3.11 or 3.12
 - **Java 17+**, only needed for PDF import via Audiveris
 
@@ -162,14 +225,11 @@ Restart the backend after installing. Without Basic Pitch, MIDI / MusicXML / PDF
 
 ## Public deployments
 
-If you're hosting Bach to Basics on the public internet (not on `localhost` or behind a VPN), set these env vars on the backend before exposing it:
+If you're hosting Bach to Basics on the public internet (not on `localhost` or behind a VPN), put the whole app behind an access-controlled reverse proxy / SSO layer and run it over **HTTPS** (Web MIDI requires HTTPS anyway).
 
-1. **`BACKEND_API_KEY`** - a long random value; clients must send `X-API-Key: <value>` on every request
-2. **`REQUIRE_AUTH=1`** - makes the backend refuse to start if `BACKEND_API_KEY` is not set (turns a silent log warning into a fail-fast)
-3. **`ALLOWED_ORIGINS`** - your exact frontend hostname only (e.g. `https://piano.example.com`), not `*`
-4. Run behind **HTTPS** (Web MIDI requires it anyway)
+The backend also supports **`BACKEND_API_KEY`** + **`REQUIRE_AUTH=1`** for custom API clients or a reverse proxy that injects `X-API-Key`. The bundled browser UI does **not** prompt for or embed a backend API key, so setting a non-empty `BACKEND_API_KEY` by itself will make the built-in UI's `/api/*` requests return 403.
 
-Without these, the backend's expensive endpoints (audio transcription, PDF rendering, OMR, YouTube extraction) are open to the internet and can be abused.
+Also set **`ALLOWED_ORIGINS`** to the exact public frontend hostname(s), not `*`, and keep rate limiting enabled. Without an outer access-control layer, expensive endpoints (audio transcription, PDF rendering, OMR, YouTube extraction) are reachable by anyone who can access the app.
 
 ## Configuration
 

@@ -96,7 +96,7 @@ export interface PlaybackState {
 
 // ─── Utility: key signature to display label ─────────────────────────────────
 export function keySignatureToLabel(ks: KeySignature): string {
-  return `${ks.key} ${ks.scale}`;
+  return `${ks.key} ${ks.scale === "major" ? "大调" : "小调"}`;
 }
 
 // ─── Utility: MIDI ticks to seconds using a tempo map ────────────────────────
