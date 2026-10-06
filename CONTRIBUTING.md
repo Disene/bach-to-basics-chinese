@@ -5,6 +5,7 @@ Thanks for your interest! This guide covers the practical bits of working on the
 ## Quick start (development)
 
 ```bash
+# Requires pnpm 9 (npm i -g pnpm@9)
 pnpm install
 pnpm backend:setup       # creates backend/.venv with the core deps
 pnpm dev                 # starts frontend (5173) + backend (8000) concurrently
