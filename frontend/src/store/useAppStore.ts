@@ -289,7 +289,7 @@ export const useAppStore = create<AppState>((set, get) => {
         const id = crypto.randomUUID();
         // M4 - strip path separators, control chars; cap length
         const rawTitle = file.name.replace(/\.midi?$/i, "");
-        const title = rawTitle.replace(/[\x00-\x1f\x7f/\\]/g, "").slice(0, 200) || "Untitled";
+        const title = rawTitle.replace(/[\x00-\x1f\x7f/\\]/g, "").slice(0, 200) || "未命名";
 
         // Slice a copy BEFORE transferring - postMessage() detaches (empties) the original
         const bufferForXml = rawBuffer.slice(0);
@@ -314,7 +314,7 @@ export const useAppStore = create<AppState>((set, get) => {
         const id = crypto.randomUUID();
         // M4 - strip path separators, control chars; cap length
         const rawTitle = file.name.replace(/\.(xml|mxl)$/i, "");
-        const title = rawTitle.replace(/[\x00-\x1f\x7f/\\]/g, "").slice(0, 200) || "Untitled";
+        const title = rawTitle.replace(/[\x00-\x1f\x7f/\\]/g, "").slice(0, 200) || "未命名";
         const xmlBytes = await file.arrayBuffer();
 
         // For .mxl (ZIP-compressed MusicXML) decompress in the browser so we
@@ -374,7 +374,7 @@ export const useAppStore = create<AppState>((set, get) => {
       const id = crypto.randomUUID();
       // M4 - strip path separators and control chars; cap length
       const rawTitle = file.name.replace(/\.pdf$/i, "");
-      const title = rawTitle.replace(/[\x00-\x1f\x7f/\\]/g, "").slice(0, 200) || "Untitled";
+      const title = rawTitle.replace(/[\x00-\x1f\x7f/\\]/g, "").slice(0, 200) || "未命名";
 
       set({
         isLoadingDocument: true,
@@ -392,7 +392,7 @@ export const useAppStore = create<AppState>((set, get) => {
 
         if (!res.ok) {
           const body = (await res.json().catch(() => ({}))) as { detail?: string };
-          throw new Error(body.detail ?? `Server error ${res.status}`);
+          throw new Error(body.detail ?? `服务器错误 ${res.status}`);
         }
 
         const { musicxml, midi_b64 } = (await res.json()) as {
@@ -444,11 +444,11 @@ export const useAppStore = create<AppState>((set, get) => {
     loadAudioFile: async (file: File) => {
       const id = crypto.randomUUID();
       const rawTitle = file.name.replace(/\.(mp3|wav|m4a|ogg|flac|aac)$/i, "");
-      const title = rawTitle.replace(/[\x00-\x1f\x7f/\\]/g, "").slice(0, 200) || "Untitled";
+      const title = rawTitle.replace(/[\x00-\x1f\x7f/\\]/g, "").slice(0, 200) || "未命名";
 
       set({
         isLoadingDocument: true,
-        loadingMessage: "Transcribing audio…",
+        loadingMessage: "正在转录音频…",
         loadError: null,
       });
 
@@ -462,7 +462,7 @@ export const useAppStore = create<AppState>((set, get) => {
 
         if (!res.ok) {
           const body = (await res.json().catch(() => ({}))) as { detail?: string };
-          throw new Error(body.detail ?? `Server error ${res.status}`);
+          throw new Error(body.detail ?? `服务器错误 ${res.status}`);
         }
 
         // Endpoint returns a raw MIDI file (audio/midi) - parse it through the
@@ -498,7 +498,7 @@ export const useAppStore = create<AppState>((set, get) => {
         });
         if (!res.ok) {
           const body = (await res.json().catch(() => ({}))) as { detail?: string };
-          throw new Error(body.detail ?? `Server error ${res.status}`);
+          throw new Error(body.detail ?? `服务器错误 ${res.status}`);
         }
         const { musicxml: annotatedXml } = (await res.json()) as { musicxml: string };
 
@@ -568,7 +568,7 @@ export const useAppStore = create<AppState>((set, get) => {
         });
         if (!res.ok) {
           const body = (await res.json().catch(() => ({}))) as { detail?: string };
-          throw new Error(body.detail ?? `Server error ${res.status}`);
+          throw new Error(body.detail ?? `服务器错误 ${res.status}`);
         }
         const blob = await res.blob();
         triggerDownload(blob, `${safeFilename(doc.title)}.pdf`);
@@ -658,7 +658,7 @@ export const useAppStore = create<AppState>((set, get) => {
         });
         if (!res.ok) {
           const body = (await res.json().catch(() => ({}))) as { detail?: string };
-          throw new Error(body.detail ?? `Server error ${res.status}`);
+          throw new Error(body.detail ?? `服务器错误 ${res.status}`);
         }
 
         const blob = await res.blob();

@@ -27,8 +27,8 @@ export function DevicePanel() {
         const msg = err instanceof Error ? err.message : String(err);
         setErrorMsg(
           !navigator.requestMIDIAccess
-            ? "Web MIDI not supported. Use Chrome or Edge."
-            : `MIDI access denied. Check browser permissions. (${msg})`
+            ? "当前浏览器不支持 Web MIDI，请使用 Chrome 或 Edge。"
+            : `MIDI 访问被拒绝，请检查浏览器权限。(${msg})`
         );
         setMidiStatus("error");
       });
@@ -78,7 +78,7 @@ export function DevicePanel() {
     return (
       <div
         className="text-xs px-2 py-1 rounded cursor-help shrink-0"
-        title={errorMsg ?? "MIDI error"}
+        title={errorMsg ?? "MIDI 错误"}
         style={{ color: "var(--color-warning)", background: "var(--color-warning-subtle)", border: "1px solid var(--color-warning-border)" }}
       >
         ⚠ MIDI
@@ -97,7 +97,7 @@ export function DevicePanel() {
       <button
         ref={chipRef}
         onClick={() => setOpen((v) => !v)}
-        title={connected ? `Connected: ${midiDeviceName}` : "Select MIDI input device"}
+        title={connected ? `已连接：${midiDeviceName}` : "选择 MIDI 输入设备"}
         className="flex items-center gap-2 text-xs font-semibold transition-colors shrink-0"
         style={{
           background: connected ? "rgba(34,197,94,0.08)" : "var(--color-warning-subtle)",
@@ -122,7 +122,7 @@ export function DevicePanel() {
           className="truncate"
           style={{ maxWidth: 130 }}
         >
-          {connected ? midiDeviceName : "No MIDI device"}
+          {connected ? midiDeviceName : "未连接 MIDI 设备"}
         </span>
         <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" style={{ opacity: 0.5, flexShrink: 0 }}>
           <path d="M7 10l5 5 5-5z"/>
@@ -150,12 +150,12 @@ export function DevicePanel() {
             className="px-3 py-2 text-xs font-semibold uppercase tracking-wide"
             style={{ color: "var(--color-text-muted)", borderBottom: "1px solid var(--color-border)" }}
           >
-            MIDI Input
+            MIDI 输入
           </div>
 
           {inputs.length === 0 ? (
             <div className="px-3 py-3 text-xs" style={{ color: "var(--color-text-muted)" }}>
-              No MIDI devices found.
+              未找到 MIDI 设备。
             </div>
           ) : (
             <ul style={{ listStyle: "none", margin: 0, padding: "4px 0" }}>
@@ -195,7 +195,7 @@ export function DevicePanel() {
                 className="w-full text-left px-3 py-2 text-xs transition-colors"
                 style={{ background: "transparent", color: "#f87171", border: "none", cursor: "pointer" }}
               >
-                Disconnect
+                断开连接
               </button>
             </div>
           )}
