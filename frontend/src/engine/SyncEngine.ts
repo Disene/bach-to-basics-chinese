@@ -36,7 +36,7 @@ export interface SyncEngineState {
   waitForHand: "left" | "right" | "both";
 }
 
-class SyncEngine {
+export class SyncEngine {
   private clock = new MidiClock();
   readonly audio = new AudioEngine();
 
