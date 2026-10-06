@@ -20,7 +20,9 @@ export function DevicePanel() {
         WebMidi.addListener("connected", () => setInputs(WebMidi.inputs.map((i) => i.name)));
         WebMidi.addListener("disconnected", (e) => {
           setInputs(WebMidi.inputs.map((i) => i.name));
-          if (e.port.name === midiDeviceName) setMidiDevice(null);
+          // Read the current store value instead of the mount-time closure.
+          // Otherwise disconnecting a device selected later leaves the UI "connected".
+          if (e.port.name === useAppStore.getState().midiDeviceName) setMidiDevice(null);
         });
       })
       .catch((err: unknown) => {
