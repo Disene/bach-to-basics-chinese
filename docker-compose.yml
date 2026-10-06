@@ -1,21 +1,13 @@
-# Bach to Basics: production-style docker compose
-#
-# Usage:
-#   cp .env.example .env       # optional, only needed if you want to set BACKEND_API_KEY
-#   docker compose up          # build + start
-#   open http://localhost:5173
-#
-# To enable PDF import via Audiveris, drop audiveris.jar into ./backend/bin/
-# before bringing the stack up, it gets mounted into the backend container.
-#
-# This compose file is for end users who want to RUN the app. For active
-# development with hot reload, use `pnpm dev` directly on your host.
-
+# Bach to Basics: production-style Docker Compose
+# Optional build-time Audiveris: set INSTALL_AUDIVERIS=1 in .env.
+# See docs/AUDIVERIS.md. Legacy JAR mounting remains available.
 services:
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        INSTALL_AUDIVERIS: ${INSTALL_AUDIVERIS:-0}
     container_name: bach-backend
     restart: unless-stopped
     expose:
@@ -31,12 +23,12 @@ services:
       - AUDIVERIS_TIMEOUT_S=${AUDIVERIS_TIMEOUT_S:-120}
       - FINGERING_TIMEOUT_S=${FINGERING_TIMEOUT_S:-120}
     volumes:
-      # Mount audiveris.jar from host (optional - PDF import is disabled if absent)
+      # Legacy standalone JAR only. The optional bundled installer uses /opt
+      # and a PATH launcher, so this mount cannot hide its installation.
       - ./backend/bin:/app/bin:ro
 
   frontend:
     build:
-      # Root context so the Dockerfile can read pnpm-workspace.yaml + shared/
       context: .
       dockerfile: frontend/Dockerfile
     container_name: bach-frontend
