@@ -565,8 +565,8 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                       <div style={{ display: "flex", gap: 5 }}>
                         {(
                           [
-                            { color: colors.leftHand, label: "L" },
-                            { color: colors.rightHand, label: "R" },
+                            { color: colors.leftHand, label: "左" },
+                            { color: colors.rightHand, label: "右" },
                           ] as { color: string; label: string }[]
                         ).map(({ color, label }) => (
                           <div
@@ -643,8 +643,8 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                 {/* Live dots with L / R / ? labels */}
                 <div style={{ display: "flex", gap: 5 }}>
                   {[
-                    { key: "leftHand" as const, label: "L" },
-                    { key: "rightHand" as const, label: "R" },
+                    { key: "leftHand" as const, label: "左" },
+                    { key: "rightHand" as const, label: "右" },
                     { key: "unknown" as const, label: "?" },
                   ].map(({ key, label }) => (
                     <div

@@ -418,7 +418,7 @@ function EmptyState({ onImport }: { onImport: (file: File) => void }) {
       </button>
 
       <span style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: -10 }}>
-        or drag &amp; drop anywhere
+        也可以将文件拖放到页面任意位置
       </span>
 
       <input
@@ -624,7 +624,7 @@ function StatusBar() {
           )}
         </>
       ) : (
-        <span>No file loaded - drag &amp; drop or click ↑ Import</span>
+        <span>尚未加载文件——拖放文件或点击 ↑ 导入</span>
       )}
       <div className="flex-1 min-w-0" />
       {doc && (
