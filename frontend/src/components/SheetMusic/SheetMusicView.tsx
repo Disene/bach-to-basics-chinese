@@ -117,8 +117,6 @@ export function SheetMusicView() {
           const tracks = Array.from(score?.tracks ?? []) as any[];
           if (
             tracks.length > 1 &&
-            score &&
-            typeof score === "object" &&
             !expandedScores.has(score)
           ) {
             expandedScores.add(score);
