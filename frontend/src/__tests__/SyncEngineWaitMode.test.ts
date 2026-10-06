@@ -155,6 +155,43 @@ describe("SyncEngine wait mode", () => {
     expect(engine.state.status).toBe("playing");
   });
 
+  it("keeps live notes sounding while CC64 is down and releases them on pedal-up", async () => {
+    const engine = new SyncEngine();
+    await engine.loadDocument(doc([]));
+
+    engine.setSustainPedal(true);
+    expect(engine.state.sustainPedalDown).toBe(true);
+
+    await engine.playMidi(60, 90);
+    engine.stopMidi(60);
+    expect(audioInstances[0].stopNote).not.toHaveBeenCalled();
+
+    engine.setSustainPedal(false);
+    expect(engine.state.sustainPedalDown).toBe(false);
+    expect(audioInstances[0].stopNote).toHaveBeenCalledWith(60);
+  });
+
+  it("separates visual note-off from source-MIDI sustain audio release", async () => {
+    const engine = new SyncEngine();
+    const source = doc([note("n1", 60, 1)]);
+    source.sustainRanges = [{ startSeconds: 0.5, endSeconds: 3 }];
+    await engine.loadDocument(source);
+
+    const testEngine = engine as unknown as TestEngineInternals;
+    testEngine._state.status = "playing";
+    testEngine.onTick(0);
+
+    expect(scheduled.length).toBe(3); // note-on + visual note-off + sustained audio off
+    scheduled[0]();
+    expect(audioInstances[0].playNote).toHaveBeenCalled();
+
+    scheduled[1]();
+    expect(audioInstances[0].stopNote).not.toHaveBeenCalled();
+
+    scheduled[2]();
+    expect(audioInstances[0].stopNote).toHaveBeenCalledWith(60, "n1");
+  });
+
   it("matches the transposed pitch instead of the source MIDI pitch", async () => {
     const engine = new SyncEngine();
     await engine.loadDocument(doc([note("n1", 60, 1)]));
