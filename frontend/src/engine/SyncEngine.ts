@@ -489,10 +489,6 @@ export class SyncEngine {
   }
 
   /**
-   * Applies transposition to a note, clamping to the 88-key range (A0-C8).
-   * Returns the original note object unchanged if transposeSemitones is 0.
-   */
-  /**
    * Return the audible note-off time after applying the source MIDI's CC64 ranges.
    * The visual key/note release still happens at note.endSeconds; only audio rings
    * until the pedal-up boundary.
@@ -509,6 +505,9 @@ export class SyncEngine {
     return endSeconds;
   }
 
+  /**
+   * Apply semitone transposition, clamped to the 88-key piano range (A0-C8).
+   */
   private transposeNote(note: NoteEvent): NoteEvent {
     if (this.transposeSemitones === 0) return note;
     const tMidi = Math.max(21, Math.min(108, note.midi + this.transposeSemitones));
