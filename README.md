@@ -8,6 +8,11 @@
 </p>
 
 <p align="center">
+  <a href="#简体中文-fork">简体中文</a> ·
+  <a href="#upstream-project-documentation">English</a>
+</p>
+
+<p align="center">
   <a href="https://github.com/Disene/bach-to-basics-chinese/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-7c3aed"></a>
   <a href="https://github.com/Disene/bach-to-basics-chinese/issues"><img alt="Issues" src="https://img.shields.io/github/issues/Disene/bach-to-basics-chinese"></a>
   <a href="https://github.com/gigliof/bach-to-basics"><img alt="Upstream" src="https://img.shields.io/badge/upstream-gigliof%2Fbach--to--basics-64748b"></a>
@@ -19,6 +24,8 @@
 这是 [gigliof/bach-to-basics](https://github.com/gigliof/bach-to-basics) 的简体中文 Fork，保留 MIT 许可和上游作者署名。
 
 当前 Fork 的目标不是另起一个平行产品，而是在尽量保持上游结构和可同步性的前提下，补齐中文界面、Docker 可复现部署，以及实际钢琴练习中发现的功能链路问题。
+
+> 当前应用界面以**简体中文为默认语言**。如需英文界面与英文原始说明，请使用上游项目 [gigliof/bach-to-basics](https://github.com/gigliof/bach-to-basics)。本 Fork 暂不引入运行时多语言切换，以减少与上游同步时的冲突和维护成本。
 
 ### 本 Fork 已完成的主要改进
 
@@ -41,7 +48,7 @@
 | 五线谱渲染 | ✅ 已实测 |
 | 实体 CC64 踏板状态与实时延音 | ✅ 已实测 |
 | 音色切换与设置布局 | ✅ 已实测 |
-| MIDI 文件自带 CC64 播放/标记 | 🧪 代码与测试已覆盖，待补一次实体环境导入验证 |
+| MIDI 文件自带 CC64 播放/标记 | ✅ 已实测 |
 | GitHub Actions CI | ⚪ 当前未作为本 Fork 的验收依据 |
 
 ### Docker 快速启动
