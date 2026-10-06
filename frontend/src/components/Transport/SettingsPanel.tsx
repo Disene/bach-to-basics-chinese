@@ -459,6 +459,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
 
   const hasFingering = !!doc?.notes.some((note) => note.finger !== null);
   const toggleFingering = () => {
+    if (isGeneratingFingering) return;
     if (settings.showFingering) {
       updateSettings({ showFingering: false });
       return;
@@ -1108,14 +1109,16 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
               sublabel="在钢琴键盘上显示 1–5 指法"
               title="在钢琴键盘上显示指法编号提示"
             >
-              {doc?.musicXml && (
+              {doc && (
                 <button
                   onClick={() => void generateFingering()}
                   disabled={isGeneratingFingering || !doc.notes.length}
                   title={
-                    doc.fingeringVersion !== "none"
-                      ? "使用 Parncutt 算法优化指法编号。现有指法会保留为锚点，算法只补全空缺，适合 Henle 等仅在难点标注指法的编辑版乐谱。"
-                      : "使用 Parncutt 算法生成指法编号提示"
+                    !doc.musicXml
+                      ? "正在准备乐谱数据；点击后会在准备完成后自动生成指法"
+                      : doc.fingeringVersion !== "none"
+                        ? "使用 Parncutt 算法优化指法编号。现有指法会保留为锚点，算法只补全空缺，适合 Henle 等仅在难点标注指法的编辑版乐谱。"
+                        : "使用 Parncutt 算法生成指法编号提示"
                   }
                   style={{
                     fontSize: 11,
