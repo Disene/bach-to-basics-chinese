@@ -38,10 +38,18 @@ export function applyFingeringMarks(notes: NoteEvent[], marks: FingeringMark[]):
   };
 
   return notes.map((note) => {
-    const mark =
-      note.hand === "unknown"
-        ? takeNext(byPitch.get(note.midi))
-        : takeNext(byHandPitch.get(`${note.hand}:${note.midi}`));
+    let mark: FingeringMark | undefined;
+    if (note.hand === "unknown") {
+      // The MIDI→MusicXML backend uses middle C (60) as the same treble/bass
+      // split for single-track files. Try that deterministic route first,
+      // then fall back to pitch-only matching for unusual source scores.
+      const inferredHand = note.midi >= 60 ? "right" : "left";
+      mark =
+        takeNext(byHandPitch.get(`${inferredHand}:${note.midi}`)) ??
+        takeNext(byPitch.get(note.midi));
+    } else {
+      mark = takeNext(byHandPitch.get(`${note.hand}:${note.midi}`));
+    }
     return mark ? { ...note, finger: mark.finger } : { ...note };
   });
 }
