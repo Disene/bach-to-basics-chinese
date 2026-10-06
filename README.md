@@ -112,7 +112,7 @@ That's it. Stop with `Ctrl+C` (or `docker compose down`).
 
 You'll need:
 
-- **Node.js** 22+ and **pnpm** (`npm i -g pnpm`)
+- **Node.js** 22+ and **pnpm 9** (`npm i -g pnpm@9`)
 - **Python** 3.11 or 3.12
 - **Java 17+**, only needed for PDF import via Audiveris
 
