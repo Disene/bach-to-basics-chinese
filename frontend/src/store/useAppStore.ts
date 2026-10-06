@@ -3,6 +3,7 @@ import { syncEngine } from "../engine/SyncEngine";
 import bus from "../engine/EventBus";
 import type { MusicDocument, PlaybackStatus, NoteEvent, Finger } from "@bach-to-basics/shared";
 import type { InstrumentId } from "../engine/AudioEngine";
+import { applyFingeringMarks, type FingeringMark } from "../utils/fingeringMapping";
 export { computeMeasureSeconds, keySignatureToLabel } from "@bach-to-basics/shared";
 export type { InstrumentId } from "../engine/AudioEngine";
 export { INSTRUMENT_LABELS } from "../engine/AudioEngine";
@@ -895,52 +896,6 @@ const CIRCLED_FINGER_TO_DIGIT: Record<string, string> = {
   "④": "4",
   "⑤": "5",
 };
-
-export interface FingeringMark {
-  midi: number;
-  hand: "left" | "right";
-  finger: Finger | null;
-}
-
-/**
- * Match parsed fingering marks back to MIDI NoteEvents.
- *
- * Known-hand notes consume marks from the same hand + pitch queue. Single-track
- * MIDI files use hand="unknown"; those consume from a pitch-only queue instead.
- * A shared consumed set prevents one XML mark being assigned twice.
- */
-export function applyFingeringMarks(notes: NoteEvent[], marks: FingeringMark[]): NoteEvent[] {
-  const byHandPitch = new Map<string, FingeringMark[]>();
-  const byPitch = new Map<number, FingeringMark[]>();
-
-  for (const mark of marks) {
-    const handKey = `${mark.hand}:${mark.midi}`;
-    const handQueue = byHandPitch.get(handKey) ?? [];
-    handQueue.push(mark);
-    byHandPitch.set(handKey, handQueue);
-
-    const pitchQueue = byPitch.get(mark.midi) ?? [];
-    pitchQueue.push(mark);
-    byPitch.set(mark.midi, pitchQueue);
-  }
-
-  const consumed = new Set<FingeringMark>();
-  const takeNext = (queue: FingeringMark[] | undefined): FingeringMark | undefined => {
-    if (!queue) return undefined;
-    while (queue.length > 0 && consumed.has(queue[0])) queue.shift();
-    const mark = queue.shift();
-    if (mark) consumed.add(mark);
-    return mark;
-  };
-
-  return notes.map((note) => {
-    const mark =
-      note.hand === "unknown"
-        ? takeNext(byPitch.get(note.midi))
-        : takeNext(byHandPitch.get(`${note.hand}:${note.midi}`));
-    return mark ? { ...note, finger: mark.finger } : { ...note };
-  });
-}
 
 /**
  * Parse pianoplayer fingering annotations from MusicXML, then map them onto the
