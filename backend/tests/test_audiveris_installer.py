@@ -156,7 +156,10 @@ class InstallerTests(unittest.TestCase):
                 installer.install()
                 call.assert_called_with([str(alias), "-batch", "-help"], check=True, timeout=60)
             self.assertEqual(events, ["verified-download", "update", "install", "-batch"])
-            self.assertEqual(alias.resolve(), launcher.resolve())
+            self.assertTrue(alias.is_file())
+            self.assertIn(installer.WRAPPER_MARKER, alias.read_text())
+            self.assertIn('GDK_SCALE:=1', alias.read_text())
+            self.assertTrue(alias.stat().st_mode & 0o111)
 
     def test_menu_directory_failure_aborts_before_apt(self):
         with patch.object(installer, "validate_platform"), \
