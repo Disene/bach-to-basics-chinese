@@ -457,6 +457,19 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
     }
   };
 
+  const hasFingering = !!doc?.notes.some((note) => note.finger !== null);
+  const toggleFingering = () => {
+    if (settings.showFingering) {
+      updateSettings({ showFingering: false });
+      return;
+    }
+    if (hasFingering) {
+      updateSettings({ showFingering: true });
+      return;
+    }
+    void generateFingering();
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -1098,7 +1111,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
               {doc?.musicXml && (
                 <button
                   onClick={() => void generateFingering()}
-                  disabled={isGeneratingFingering}
+                  disabled={isGeneratingFingering || !doc.notes.length}
                   title={
                     doc.fingeringVersion !== "none"
                       ? "使用 Parncutt 算法优化指法编号。现有指法会保留为锚点，算法只补全空缺，适合 Henle 等仅在难点标注指法的编辑版乐谱。"
@@ -1113,22 +1126,29 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                     color: isGeneratingFingering
                       ? "var(--color-text-muted)"
                       : "var(--color-accent)",
-                    cursor: isGeneratingFingering ? "wait" : "pointer",
+                    cursor: isGeneratingFingering || !doc.notes.length ? "wait" : "pointer",
                     whiteSpace: "nowrap",
                     flexShrink: 0,
-                    opacity: isGeneratingFingering ? 0.6 : 1,
+                    opacity: isGeneratingFingering || !doc.notes.length ? 0.6 : 1,
                   }}
                 >
                   {isGeneratingFingering
-                    ? "Generating…"
-                    : doc.fingeringVersion !== "none"
-                      ? "Regenerate"
-                      : "Generate"}
+                    ? "正在生成…"
+                    : !doc.notes.length
+                      ? "准备中…"
+                      : doc.fingeringVersion !== "none"
+                        ? "重新生成"
+                        : "生成"}
                 </button>
               )}
               <Toggle
                 active={settings.showFingering}
-                onClick={() => updateSettings({ showFingering: !settings.showFingering })}
+                onClick={toggleFingering}
+                title={
+                  hasFingering
+                    ? "显示或隐藏指法编号"
+                    : "尚无指法数据，开启时会自动生成"
+                }
               />
             </Row>
 
