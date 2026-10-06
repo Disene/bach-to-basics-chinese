@@ -94,15 +94,15 @@ describe("isBlackKey", () => {
 
 describe("keySignatureToLabel", () => {
   it("formats a major key signature", () => {
-    expect(keySignatureToLabel({ key: "C", scale: "major" })).toBe("C major");
+    expect(keySignatureToLabel({ key: "C", scale: "major" })).toBe("C 大调");
   });
 
   it("formats a minor key signature", () => {
-    expect(keySignatureToLabel({ key: "A", scale: "minor" })).toBe("A minor");
+    expect(keySignatureToLabel({ key: "A", scale: "minor" })).toBe("A 小调");
   });
 
   it("handles sharp key names", () => {
-    expect(keySignatureToLabel({ key: "F#", scale: "major" })).toBe("F# major");
+    expect(keySignatureToLabel({ key: "F#", scale: "major" })).toBe("F# 大调");
   });
 });
 
