@@ -104,7 +104,7 @@ docker compose up        # build the images on first run, then start
 open http://localhost:5173
 ```
 
-That's it. Stop with `Ctrl+C` (or `docker compose down`).
+That's it. Stop with `Ctrl+C` (or `docker compose down`). If port 5173 is unavailable, set `FRONTEND_PORT` in `.env` (for example `FRONTEND_PORT=51722`) and open that port instead.
 
 > Optional: copy `.env.example` to `.env` and set `BACKEND_API_KEY` if you want to require an API key on the backend.
 
