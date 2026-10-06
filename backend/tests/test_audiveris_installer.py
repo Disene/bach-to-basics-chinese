@@ -209,6 +209,50 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual(after.returncode, 0, after.stderr)
             self.assertEqual((applications / desktop.name).read_text(), desktop.read_text())
 
+    def test_headless_wrapper_defaults_scale_and_forwards_args(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            launcher = root / "Audiveris"
+            alias = root / "audiveris"
+            output = root / "output.txt"
+            launcher.write_text(
+                '#!/bin/sh\nprintf "%s|%s" "$GDK_SCALE" "$*" > "$OUTPUT"\n'
+            )
+            launcher.chmod(0o755)
+            installer.write_headless_wrapper(alias, launcher)
+            env = dict(os.environ, OUTPUT=str(output))
+            env.pop("GDK_SCALE", None)
+            subprocess.run([str(alias), "-batch", "-help"], check=True, env=env)
+            self.assertEqual(output.read_text(), "1|-batch -help")
+            self.assertTrue(alias.stat().st_mode & 0o111)
+
+    def test_headless_wrapper_preserves_explicit_scale(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            launcher = root / "Audiveris"
+            alias = root / "audiveris"
+            output = root / "output.txt"
+            launcher.write_text(
+                '#!/bin/sh\nprintf "%s" "$GDK_SCALE" > "$OUTPUT"\n'
+            )
+            launcher.chmod(0o755)
+            installer.write_headless_wrapper(alias, launcher)
+            env = dict(os.environ, OUTPUT=str(output), GDK_SCALE="2")
+            subprocess.run([str(alias)], check=True, env=env)
+            self.assertEqual(output.read_text(), "2")
+
+    def test_headless_wrapper_refuses_unrelated_existing_command(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            launcher = root / "Audiveris"
+            alias = root / "audiveris"
+            launcher.write_text("#!/bin/sh\nexit 0\n")
+            launcher.chmod(0o755)
+            alias.write_text("#!/bin/sh\necho unrelated\n")
+            alias.chmod(0o755)
+            with self.assertRaisesRegex(RuntimeError, "Refusing to replace"):
+                installer.write_headless_wrapper(alias, launcher)
+
 
 if __name__ == "__main__":
     unittest.main()
