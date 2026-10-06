@@ -10,7 +10,7 @@ export function DevicePanel() {
   const [open, setOpen] = useState(false);
   const chipRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
-  const { midiDeviceName, setMidiDevice } = useAppStore();
+  const { midiDeviceName, sustainPedalDown, setMidiDevice } = useAppStore();
 
   useEffect(() => {
     WebMidi.enable({ sysex: false })
@@ -22,7 +22,10 @@ export function DevicePanel() {
           setInputs(WebMidi.inputs.map((i) => i.name));
           // Read the current store value instead of the mount-time closure.
           // Otherwise disconnecting a device selected later leaves the UI "connected".
-          if (e.port.name === useAppStore.getState().midiDeviceName) setMidiDevice(null);
+          if (e.port.name === useAppStore.getState().midiDeviceName) {
+            syncEngine.setSustainPedal(false);
+            setMidiDevice(null);
+          }
         });
       })
       .catch((err: unknown) => {
@@ -65,6 +68,14 @@ export function DevicePanel() {
       void syncEngine.playMidi(e.note.number, e.rawValue ?? 64);
     });
     input.addListener("noteoff", (e) => syncEngine.stopMidi(e.note.number));
+    input.addListener("controlchange", (e) => {
+      if (e.controller.number !== 64) return;
+      const raw =
+        typeof e.rawValue === "number"
+          ? e.rawValue
+          : Math.round((typeof e.value === "number" ? e.value : 0) * 127);
+      syncEngine.setSustainPedal(raw >= 64);
+    });
     setMidiDevice(name);
     setOpen(false);
   };
@@ -73,6 +84,7 @@ export function DevicePanel() {
     if (midiDeviceName) {
       try { WebMidi.getInputByName(midiDeviceName)?.removeListener(); } catch {}
     }
+    syncEngine.setSustainPedal(false);
     setMidiDevice(null);
     setOpen(false);
   };
@@ -96,7 +108,43 @@ export function DevicePanel() {
   const connected = !!midiDeviceName;
 
   return (
-    <div className="relative shrink-0">
+    <div className="relative shrink-0 flex items-center gap-1.5">
+      {/* Real-time CC64 indicator - visible whenever a MIDI device is connected. */}
+      {connected && (
+        <div
+          title="CC64 延音踏板实时状态"
+          aria-label={`延音踏板：${sustainPedalDown ? "踩下" : "抬起"}`}
+          className="text-xs font-semibold shrink-0"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            padding: "4px 8px",
+            borderRadius: 999,
+            border: sustainPedalDown
+              ? "1px solid rgba(147,51,234,0.5)"
+              : "1px solid var(--color-border)",
+            background: sustainPedalDown
+              ? "rgba(147,51,234,0.10)"
+              : "var(--color-surface-2)",
+            color: sustainPedalDown ? "var(--color-accent)" : "var(--color-text-muted)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span
+            aria-hidden
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: sustainPedalDown ? "var(--color-accent)" : "var(--color-border)",
+              boxShadow: sustainPedalDown ? "0 0 6px var(--color-accent)" : "none",
+            }}
+          />
+          踏板 {sustainPedalDown ? "踩下" : "抬起"}
+        </div>
+      )}
+
       {/* Chip button */}
       <button
         ref={chipRef}
