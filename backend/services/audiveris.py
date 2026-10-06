@@ -90,7 +90,7 @@ def _run_omr_and_convert(file_bytes: bytes, suffix: str) -> tuple[str, bytes]:
 def _run_audiveris(file_bytes: bytes, suffix: str) -> str:
     # H4 - validate suffix even if caller skips router-level check
     if suffix.lower() not in _ALLOWED_SUFFIXES:
-        raise ValueError(f"Unsupported file type: {suffix!r}")
+        raise ValueError(f"不支持的文件类型：{suffix!r}")
 
     cmd_prefix = _find_audiveris()
     if cmd_prefix is None:
@@ -101,7 +101,7 @@ def _run_audiveris(file_bytes: bytes, suffix: str) -> str:
             "Audiveris not found. Checked: %s, %s, PATH",
             _LEGACY_JAR, _MACOS_APP_BIN,
         )
-        raise RuntimeError("OMR engine is not available on this server")
+        raise RuntimeError("此服务器未安装 OMR 乐谱识别引擎")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         input_path = Path(tmpdir) / f"input{suffix}"
@@ -122,7 +122,7 @@ def _run_audiveris(file_bytes: bytes, suffix: str) -> str:
 
         if result.returncode != 0:
             # H3 - don't leak internal tool output in API response
-            raise RuntimeError("Audiveris OMR processing failed")
+            raise RuntimeError("Audiveris 乐谱识别处理失败")
 
         xml_files = list(output_dir.rglob("*.mxl")) + list(output_dir.rglob("*.xml"))
         if not xml_files:
@@ -162,7 +162,7 @@ def _run_audiveris(file_bytes: bytes, suffix: str) -> str:
                     ),
                 )
                 if root_file is None:
-                    raise RuntimeError("Audiveris .mxl archive contains no XML entry")
+                    raise RuntimeError("Audiveris 生成的 .mxl 压缩包中没有 XML 文件")
 
                 # Stream-read with size enforcement (T1-2)
                 with zf.open(root_file) as entry:

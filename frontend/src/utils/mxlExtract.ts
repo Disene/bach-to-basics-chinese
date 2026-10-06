@@ -43,9 +43,9 @@ function findEocd(bytes: Uint8Array): number {
 /** Read central-directory entries to build a name→localOffset map. */
 function readCentralDirectory(view: DataView, bytes: Uint8Array): ZipEntry[] {
   const eocd = findEocd(bytes);
-  if (eocd === -1) throw new Error("Not a ZIP archive");
+  if (eocd === -1) throw new Error("文件不是有效的 ZIP 压缩包");
 
-  if (view.getUint32(eocd, true) !== SIG_EOCD) throw new Error("Bad EOCD signature");
+  if (view.getUint32(eocd, true) !== SIG_EOCD) throw new Error("ZIP 文件尾部目录签名无效");
 
   const numEntries = view.getUint16(eocd + 10, true);
   let cdPos = view.getUint32(eocd + 16, true);
@@ -73,7 +73,7 @@ async function readLocalEntry(
 ): Promise<Uint8Array> {
   const off = entry.localOffset;
   if (view.getUint32(off, true) !== SIG_LOCAL) {
-    throw new Error(`Bad local header at offset ${off}`);
+    throw new Error(`ZIP 本地文件头无效（偏移 ${off}）`);
   }
 
   const compressionMethod = view.getUint16(off + 8, true);
@@ -89,7 +89,7 @@ async function readLocalEntry(
     return compressed;
   }
   if (compressionMethod !== 8) {
-    throw new Error(`Unsupported ZIP compression method ${compressionMethod}`);
+    throw new Error(`不支持的 ZIP 压缩方式 ${compressionMethod}`);
   }
 
   // DEFLATE (raw, no zlib header) - decompress with browser-native stream.
@@ -112,7 +112,7 @@ async function readLocalEntry(
     if (done) break;
     totalDecompressed += value.length;
     if (totalDecompressed > MAX_DECOMPRESSED) {
-      throw new Error("Decompressed MusicXML exceeds 50 MB - possible ZIP bomb");
+      throw new Error("解压后的 MusicXML 超过 50 MB，文件可能异常");
     }
     chunks.push(value);
   }
@@ -140,19 +140,19 @@ export async function extractXmlFromMxl(buffer: ArrayBuffer): Promise<string> {
 
   // 1. Read META-INF/container.xml
   const containerEntry = find("META-INF/container.xml");
-  if (!containerEntry) throw new Error("Not a valid .mxl file: missing META-INF/container.xml");
+  if (!containerEntry) throw new Error("不是有效的 .mxl 文件：缺少 META-INF/container.xml");
 
   const containerBytes = await readLocalEntry(view, bytes, containerEntry);
   const containerXml = new TextDecoder("utf-8").decode(containerBytes);
 
   // 2. Parse the root-file path (e.g. full-path="score.xml")
   const match = containerXml.match(/full-path="([^"]+)"/);
-  if (!match) throw new Error("Malformed container.xml: no full-path attribute");
+  if (!match) throw new Error("container.xml 格式错误：缺少 full-path 属性");
   const rootPath = match[1];
 
   // 3. Read the root MusicXML entry
   const rootEntry = find(rootPath);
-  if (!rootEntry) throw new Error(`Root file "${rootPath}" not found in .mxl archive`);
+  if (!rootEntry) throw new Error(`在 .mxl 压缩包中找不到根文件“${rootPath}”`);
 
   const xmlBytes = await readLocalEntry(view, bytes, rootEntry);
   return new TextDecoder("utf-8").decode(xmlBytes);

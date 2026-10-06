@@ -29,7 +29,7 @@ async def youtube_extract(req: YoutubeExtractRequest, background_tasks: Backgrou
     # The raw req.url is NEVER forwarded to yt-dlp (SSRF prevention).
     match = re.search(r"(?:v=|youtu\.be/)([A-Za-z0-9_-]{11})", req.url)
     if not match or not _VIDEO_ID_RE.match(match.group(1)):
-        raise HTTPException(status_code=422, detail="Invalid or unsupported YouTube URL")
+        raise HTTPException(status_code=422, detail="YouTube 链接无效或不受支持")
 
     video_id = match.group(1)
     safe_url = f"https://www.youtube.com/watch?v={video_id}"
@@ -70,7 +70,7 @@ async def youtube_extract(req: YoutubeExtractRequest, background_tasks: Backgrou
         logger.exception("youtube_extract failed for video_id=%s", video_id)
         raise HTTPException(
             status_code=500,
-            detail="Audio extraction failed. Please try again.",
+            detail="音频提取失败，请重试。",
         )
 
 

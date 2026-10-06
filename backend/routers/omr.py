@@ -39,7 +39,7 @@ async def _read_with_limit(file: UploadFile, max_bytes: int = MAX_UPLOAD_BYTES) 
             break
         total += len(chunk)
         if total > max_bytes:
-            raise HTTPException(status_code=413, detail="Upload too large (max 50 MB)")
+            raise HTTPException(status_code=413, detail="上传文件过大（最大 50 MB）")
         chunks.append(chunk)
     return b"".join(chunks)
 
@@ -49,22 +49,22 @@ def _check_ext(filename: str, allowed: set[str]) -> None:
     if ext not in allowed:
         raise HTTPException(
             status_code=422,
-            detail=f"Unsupported file type. Allowed: {', '.join(sorted(allowed))}",
+            detail=f"不支持的文件类型。允许：{', '.join(sorted(allowed))}",
         )
 
 
 def _check_pdf_magic(data: bytes) -> None:
     if not data.startswith(_PDF_MAGIC):
-        raise HTTPException(status_code=422, detail="Not a valid PDF file")
+        raise HTTPException(status_code=422, detail="不是有效的 PDF 文件")
 
 
 def _check_image_magic(data: bytes, ext: str) -> None:
     if ext in {".png"} and not data.startswith(_PNG_MAGIC):
-        raise HTTPException(status_code=422, detail="Not a valid PNG file")
+        raise HTTPException(status_code=422, detail="不是有效的 PNG 文件")
     if ext in {".jpg", ".jpeg"} and not data.startswith(_JPEG_MAGIC):
-        raise HTTPException(status_code=422, detail="Not a valid JPEG file")
+        raise HTTPException(status_code=422, detail="不是有效的 JPEG 文件")
     if ext in {".tiff", ".tif"} and not any(data.startswith(m) for m in _TIFF_MAGIC):
-        raise HTTPException(status_code=422, detail="Not a valid TIFF file")
+        raise HTTPException(status_code=422, detail="不是有效的 TIFF 文件")
 
 
 @router.post("/pdf")
@@ -82,7 +82,7 @@ async def omr_pdf(file: UploadFile):
         raise
     except Exception:
         logger.exception("omr_pdf failed")
-        raise HTTPException(status_code=500, detail="OMR processing failed. Please try again.")
+        raise HTTPException(status_code=500, detail="乐谱识别（OMR）失败，请重试。")
 
 
 @router.post("/image")
@@ -102,7 +102,7 @@ async def omr_image(file: UploadFile):
         raise
     except Exception:
         logger.exception("omr_image failed")
-        raise HTTPException(status_code=500, detail="OMR processing failed. Please try again.")
+        raise HTTPException(status_code=500, detail="乐谱识别（OMR）失败，请重试。")
 
 
 @router.post("/pdf2midi")
@@ -137,4 +137,4 @@ async def omr_pdf_to_midi(file: UploadFile):
         raise HTTPException(status_code=422, detail=str(exc))
     except Exception:
         logger.exception("omr_pdf_to_midi failed unexpectedly")
-        raise HTTPException(status_code=500, detail="PDF processing failed. Please try again.")
+        raise HTTPException(status_code=500, detail="PDF 处理失败，请重试。")

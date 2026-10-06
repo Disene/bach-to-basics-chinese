@@ -10,11 +10,11 @@ export type InstrumentId =
   | "honkytonk"; // Honky-Tonk Piano (Soundfont)
 
 export const INSTRUMENT_LABELS: Record<InstrumentId, string> = {
-  grand: "Grand",
-  bright: "Bright",
-  electric: "E-Piano",
-  harpsichord: "Harpsi",
-  honkytonk: "Honky",
+  grand: "三角钢琴",
+  bright: "明亮钢琴",
+  electric: "电钢琴",
+  harpsichord: "羽管键琴",
+  honkytonk: "酒吧钢琴",
 };
 
 // Minimal common interface shared by all smplr players. Exported so the

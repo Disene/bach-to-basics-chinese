@@ -14,59 +14,59 @@ import { useState, createContext, useContext } from "react";
 const RowLabelContext = createContext<string>("");
 
 const NOTE_FILTER_OPTIONS: { value: NoteFilter; label: string; title: string }[] = [
-  { value: "all", label: "All", title: "Show all notes" },
-  { value: "white", label: "Natural", title: "Show only natural (white) key notes" },
-  { value: "black", label: "Sharps", title: "Show only sharp/flat (black) key notes" },
-  { value: "c_only", label: "C only", title: "Show only C notes" },
+  { value: "all", label: "全部", title: "显示全部音符" },
+  { value: "white", label: "自然音", title: "仅显示自然音（白键）" },
+  { value: "black", label: "升/降音", title: "仅显示升降音（黑键）" },
+  { value: "c_only", label: "仅 C", title: "仅显示 C 音" },
 ];
 
 const COLOR_THEME_LABELS: Record<ColorTheme, string> = {
-  violet: "Violet",
-  classic: "Classic",
-  ocean: "Ocean",
-  forest: "Forest",
-  cascade: "Cascade",
-  custom: "Custom",
+  violet: "紫罗兰",
+  classic: "经典",
+  ocean: "海洋",
+  forest: "森林",
+  cascade: "流光",
+  custom: "自定义",
 };
 
 const NOTE_LABEL_OPTIONS: { value: NoteLabelMode; label: string; title: string }[] = [
-  { value: "none", label: "None", title: "No note name labels" },
-  { value: "c_only", label: "C only", title: "Label C notes with octave number (C4, C5…)" },
-  { value: "white", label: "Natural", title: "Label all natural (white) keys" },
-  { value: "black", label: "Sharps", title: "Label all sharp/flat (black) keys" },
-  { value: "all", label: "All", title: "Label every key" },
+  { value: "none", label: "无", title: "不显示音名标签" },
+  { value: "c_only", label: "仅 C", title: "仅标注 C 音及八度编号（C4、C5…）" },
+  { value: "white", label: "自然音", title: "标注所有自然音（白键）" },
+  { value: "black", label: "升/降音", title: "标注所有升降音（黑键）" },
+  { value: "all", label: "全部", title: "标注所有琴键" },
 ];
 
 const INSTRUMENT_OPTIONS: { value: InstrumentId; label: string; title: string }[] = [
   {
     value: "grand",
     label: INSTRUMENT_LABELS.grand,
-    title: "Splendid Grand Piano - high-quality sampled concert grand",
+    title: "Splendid 三角钢琴——高品质音乐会三角钢琴采样",
   },
   {
     value: "bright",
     label: INSTRUMENT_LABELS.bright,
-    title: "Bright Acoustic Piano - brighter attack and tone",
+    title: "明亮原声钢琴——更明亮的起音与音色",
   },
   {
     value: "electric",
     label: INSTRUMENT_LABELS.electric,
-    title: "CP80 Electric Grand Piano - vintage Yamaha electric grand",
+    title: "CP80 电钢琴——复古 Yamaha 电三角钢琴",
   },
   {
     value: "harpsichord",
     label: INSTRUMENT_LABELS.harpsichord,
-    title: "Harpsichord - plucked strings, no velocity dynamic",
+    title: "羽管键琴——拨弦音色，无力度动态",
   },
   {
     value: "honkytonk",
     label: INSTRUMENT_LABELS.honkytonk,
-    title: "Honky-Tonk Piano - slightly out-of-tune saloon upright",
+    title: "Honky-Tonk 钢琴——略微失谐的酒吧立式钢琴",
   },
 ];
 
 function formatTranspose(n: number): string {
-  if (n === 0) return "original";
+  if (n === 0) return "原调";
   if (n > 0) return `+${n}♯`;
   return `${n}♭`;
 }
@@ -373,14 +373,14 @@ function ResetButton() {
         onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.75")}
         onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
       >
-        <MetronomeIcon /> Buy me a metronome
+        <MetronomeIcon /> 赞助作者买节拍器
       </a>
 
       <button
         onClick={handleClick}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
-        title="Reset all settings to their default values"
+        title="将所有设置恢复为默认值"
         style={{
           width: "100%",
           padding: "8px 0",
@@ -399,7 +399,7 @@ function ResetButton() {
           transition: "all 0.15s",
         }}
       >
-        {confirmed ? "Click again to confirm reset" : "Reset to defaults"}
+        {confirmed ? "再次点击以确认重置" : "恢复默认设置"}
       </button>
 
       {/* Logo mark - links to GitHub repo */}
@@ -412,7 +412,7 @@ function ResetButton() {
         >
           <img
             src="/logo.png"
-            alt="Bach to Basics on GitHub"
+            alt="Bach to Basics GitHub 仓库"
             draggable={false}
             style={{
               width: 72,
@@ -496,7 +496,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
           style={{ borderColor: "var(--color-border)", padding: "14px 20px" }}
         >
           <span style={{ fontSize: 16, fontWeight: 700, color: "var(--color-text)" }}>
-            Settings
+            设置
           </span>
           <button
             onClick={onClose}
@@ -514,8 +514,8 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
               fontSize: 14,
               lineHeight: 1,
             }}
-            title="Close settings"
-            aria-label="Close settings"
+            title="关闭设置"
+            aria-label="关闭设置"
           >
             ×
           </button>
@@ -524,11 +524,11 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto" style={{ overflowX: "hidden" }}>
           {/* ── Appearance ─────────────────────────────────────────────────── */}
-          <Section title="Appearance">
+          <Section title="外观">
             {/* Color theme - swatch grid */}
             <div style={{ padding: "10px 0 4px" }}>
               <span style={{ fontSize: 13.5, color: "var(--color-text)", fontWeight: 400 }}>
-                Color theme
+                配色主题
               </span>
             </div>
             <div style={{ padding: "0 0 12px", display: "flex", flexDirection: "column", gap: 8 }}>
@@ -542,7 +542,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                       key={theme}
                       onClick={() => handleColorThemeChange(theme)}
                       title={COLOR_THEME_LABELS[theme]}
-                      aria-label={`Color theme: ${COLOR_THEME_LABELS[theme]}`}
+                      aria-label={`配色主题：${COLOR_THEME_LABELS[theme]}`}
                       aria-pressed={active}
                       style={{
                         display: "flex",
@@ -565,8 +565,8 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                       <div style={{ display: "flex", gap: 5 }}>
                         {(
                           [
-                            { color: colors.leftHand, label: "L" },
-                            { color: colors.rightHand, label: "R" },
+                            { color: colors.leftHand, label: "左" },
+                            { color: colors.rightHand, label: "右" },
                           ] as { color: string; label: string }[]
                         ).map(({ color, label }) => (
                           <div
@@ -643,8 +643,8 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                 {/* Live dots with L / R / ? labels */}
                 <div style={{ display: "flex", gap: 5 }}>
                   {[
-                    { key: "leftHand" as const, label: "L" },
-                    { key: "rightHand" as const, label: "R" },
+                    { key: "leftHand" as const, label: "左" },
+                    { key: "rightHand" as const, label: "右" },
                     { key: "unknown" as const, label: "?" },
                   ].map(({ key, label }) => (
                     <div
@@ -689,12 +689,12 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                         : "var(--color-text-muted)",
                   }}
                 >
-                  Custom
+                  自定义
                 </span>
                 <span
                   style={{ fontSize: 11, color: "var(--color-text-muted)", marginLeft: "auto" }}
                 >
-                  pick your own colors
+                  自选颜色
                 </span>
               </button>
 
@@ -712,9 +712,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                 >
                   {(
                     [
-                      { key: "leftHand" as keyof CustomColors, label: "Left hand" },
-                      { key: "rightHand" as keyof CustomColors, label: "Right hand" },
-                      { key: "unknown" as keyof CustomColors, label: "Other" },
+                      { key: "leftHand" as keyof CustomColors, label: "左手" },
+                      { key: "rightHand" as keyof CustomColors, label: "右手" },
+                      { key: "unknown" as keyof CustomColors, label: "其他" },
                     ] as { key: keyof CustomColors; label: string }[]
                   ).map(({ key, label }) => (
                     <label
@@ -787,24 +787,24 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                     >
                       <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
                         <span style={{ fontSize: 13, color: "var(--color-text)", fontWeight: 500 }}>
-                          Differentiate hands
+                          区分左右手
                         </span>
                         <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
-                          Works with two-track MIDI files
+                          适用于双轨 MIDI 文件
                         </span>
                       </div>
                       <Toggle
                         active={settings.showHandColors}
                         onClick={() => updateSettings({ showHandColors: !settings.showHandColors })}
-                        aria-label="Differentiate hands"
+                        aria-label="区分左右手"
                       />
                     </div>
                     {settings.showHandColors && (
                       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                         {(
                           [
-                            { color: activeColors.leftHand, label: "Left hand" },
-                            { color: activeColors.rightHand, label: "Right hand" },
+                            { color: activeColors.leftHand, label: "左手" },
+                            { color: activeColors.rightHand, label: "右手" },
                           ] as { color: string; label: string }[]
                         ).map(({ color, label }) => (
                           <div
@@ -834,29 +834,29 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </div>
 
             {/* ── Keyboard sub-group ──────────────────────────────────────── */}
-            <SubHeader>Keyboard</SubHeader>
+            <SubHeader>键盘</SubHeader>
 
             {/* Key color - custom picker with mini piano-key previews */}
-            <Row label="Key color" title="Visual colour of the piano keyboard's white keys">
+            <Row label="琴键颜色" title="钢琴白键的显示颜色">
               <div
                 role="radiogroup"
-                aria-label="Piano key colour"
+                aria-label="钢琴琴键颜色"
                 style={{ display: "inline-flex", gap: 6 }}
               >
                 {(
                   [
                     {
                       value: "white" as const,
-                      label: "White",
-                      title: "Bright white piano keys",
+                      label: "白色",
+                      title: "明亮的白色琴键",
                       topColor: "#c4c4bc",
                       midColor: "#f5f5f0",
                       btmColor: "#e4e4dc",
                     },
                     {
                       value: "ivory" as const,
-                      label: "Ivory",
-                      title: "Warm cream-toned piano keys",
+                      label: "象牙色",
+                      title: "温暖的奶油色琴键",
                       topColor: "#cdc8a8",
                       midColor: "#fff8e7",
                       btmColor: "#e8e0c8",
@@ -924,13 +924,13 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Labels"
-              title="Which keys on the piano keyboard display their note name"
-              sublabel="on the keyboard"
+              label="音名标签"
+              title="选择钢琴键盘上显示音名的琴键"
+              sublabel="显示在键盘上"
               stacked
             >
               <BtnGroup
-                aria-label="Keyboard label mode"
+                aria-label="键盘音名标签模式"
                 options={NOTE_LABEL_OPTIONS}
                 value={settings.noteLabelMode}
                 onChange={(v) => updateSettings({ noteLabelMode: v })}
@@ -939,9 +939,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Use flats ♭"
-              sublabel="affects all note labels"
-              title="Show accidentals as flats (D♭) instead of sharps (C♯)"
+              label="使用降号 ♭"
+              sublabel="影响所有音名标签"
+              title="临时记号使用降号（D♭）而不是升号（C♯）"
             >
               <Toggle
                 active={settings.useFlats}
@@ -950,16 +950,16 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             {/* ── Falling notes sub-group ─────────────────────────────────── */}
-            <SubHeader>Falling notes</SubHeader>
+            <SubHeader>瀑布流音符</SubHeader>
 
             <Row
-              label="Labels"
-              title="Which falling note bars display their pitch name"
-              sublabel="on note bars"
+              label="音名标签"
+              title="选择哪些瀑布流音符条显示音名"
+              sublabel="显示在音符条上"
               stacked
             >
               <BtnGroup
-                aria-label="Falling note bar label mode"
+                aria-label="瀑布流音符条标签模式"
                 options={NOTE_LABEL_OPTIONS}
                 value={settings.fallingNotesLabelMode}
                 onChange={(v) => updateSettings({ fallingNotesLabelMode: v })}
@@ -968,13 +968,13 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Note filter"
-              sublabel="which notes appear in canvas"
-              title="Show only a subset of notes in the falling notes view"
+              label="音符筛选"
+              sublabel="选择画布中显示的音符"
+              title="仅在瀑布流视图中显示指定类型的音符"
               stacked
             >
               <BtnGroup
-                aria-label="Note filter"
+                aria-label="音符筛选"
                 options={NOTE_FILTER_OPTIONS}
                 value={settings.noteFilter}
                 onChange={(v) => updateSettings({ noteFilter: v })}
@@ -983,9 +983,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Octave grid"
-              sublabel="separator lines between octaves"
-              title="Draw subtle separator lines between octaves in the falling notes view"
+              label="八度分隔线"
+              sublabel="八度之间的分隔线"
+              title="在瀑布流视图中绘制淡化的八度分隔线"
             >
               <Toggle
                 active={settings.showGrid}
@@ -994,9 +994,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Min note height"
-              sublabel="prevents staccato notes from disappearing"
-              title="Minimum pixel height for note bars - keeps short staccato notes visible at any tempo"
+              label="最小音符高度"
+              sublabel="避免短促音符难以看清"
+              title="设置音符条的最小像素高度，使短促音符在任何速度下都清晰可见"
               stacked
             >
               <div className="flex items-center gap-1.5">
@@ -1008,7 +1008,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                   step={1}
                   value={settings.minNoteHeight}
                   onChange={(e) => updateSettings({ minNoteHeight: Number(e.target.value) })}
-                  aria-label="Minimum note height in pixels"
+                  aria-label="音符最小高度（像素）"
                   aria-valuetext={`${settings.minNoteHeight}px`}
                   className="flex-1"
                   style={rangeStyle(settings.minNoteHeight, 4, 24)}
@@ -1029,9 +1029,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Note roundness"
-              sublabel="corner radius of note bars"
-              title="Border radius of falling note bars - 0 is sharp corners, 12 is fully rounded"
+              label="音符圆角"
+              sublabel="音符条的圆角大小"
+              title="设置瀑布流音符条圆角：0 为直角，12 为最大圆角"
               stacked
             >
               <div className="flex items-center gap-1.5">
@@ -1043,7 +1043,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                   step={1}
                   value={settings.noteCornerRadius}
                   onChange={(e) => updateSettings({ noteCornerRadius: Number(e.target.value) })}
-                  aria-label="Note corner radius"
+                  aria-label="音符圆角大小"
                   aria-valuetext={`${settings.noteCornerRadius}`}
                   className="flex-1"
                   style={rangeStyle(settings.noteCornerRadius, 0, 12)}
@@ -1064,9 +1064,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Note outline"
-              sublabel="colored border around note bars"
-              title="Draw a colored border stroke around each falling note bar using its hand color"
+              label="音符描边"
+              sublabel="用左右手颜色描边"
+              title="使用对应左右手颜色为每个瀑布流音符条添加描边"
             >
               <Toggle
                 active={settings.showNoteOutline}
@@ -1075,9 +1075,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="White score background"
-              sublabel="keep sheet music on white in dark mode"
-              title="Render sheet music on a white background even in dark mode"
+              label="乐谱白色背景"
+              sublabel="深色模式下仍保持白底乐谱"
+              title="即使在深色模式下也用白色背景显示乐谱"
             >
               <Toggle
                 active={settings.sheetMusicWhiteBackground}
@@ -1089,11 +1089,11 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
           </Section>
 
           {/* ── Overlays ───────────────────────────────────────────────────── */}
-          <Section title="Overlays">
+          <Section title="叠加显示">
             <Row
-              label="Finger numbers"
-              sublabel="1-5 hints on the piano keyboard"
-              title="Show finger number hints on the piano keyboard"
+              label="指法编号"
+              sublabel="在钢琴键盘上显示 1–5 指法"
+              title="在钢琴键盘上显示指法编号提示"
             >
               {doc?.musicXml && (
                 <button
@@ -1101,8 +1101,8 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                   disabled={isGeneratingFingering}
                   title={
                     doc.fingeringVersion !== "none"
-                      ? "Refine finger numbers using the Parncutt algorithm. Existing fingerings are kept as anchors and the algorithm only fills in gaps - useful for editorial scores (e.g. Henle) where only hard passages are annotated."
-                      : "Generate finger number hints using the Parncutt algorithm"
+                      ? "使用 Parncutt 算法优化指法编号。现有指法会保留为锚点，算法只补全空缺，适合 Henle 等仅在难点标注指法的编辑版乐谱。"
+                      : "使用 Parncutt 算法生成指法编号提示"
                   }
                   style={{
                     fontSize: 11,
@@ -1134,9 +1134,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
 
             {settings.showFingering && (
               <Row
-                label="Also on falling notes"
-                sublabel="appends digit to each note bar"
-                title="Also overlay finger digits on the falling-note bars (off by default - visually busier)"
+                label="同时显示在瀑布流"
+                sublabel="在每个音符条上显示指法数字"
+                title="同时在瀑布流音符条上叠加指法数字（默认关闭，以免画面过于拥挤）"
               >
                 <Toggle
                   active={settings.showFingeringOnNotes}
@@ -1148,9 +1148,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             )}
 
             <Row
-              label="Measure numbers"
-              sublabel="on the left edge of falling notes"
-              title="Show measure numbers along the left edge of the falling notes view"
+              label="小节号"
+              sublabel="显示在瀑布流左侧"
+              title="在瀑布流视图左侧显示小节号"
             >
               <Toggle
                 active={settings.showMeasureNums}
@@ -1159,9 +1159,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Beat lines"
-              sublabel="horizontal grid lines at each beat"
-              title="Draw faint horizontal lines at each beat and measure boundary to aid rhythm reading"
+              label="节拍线"
+              sublabel="每拍显示水平辅助线"
+              title="在每拍和小节边界绘制淡化水平线，辅助节奏阅读"
             >
               <Toggle
                 active={settings.showBeatLines}
@@ -1170,9 +1170,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Sustain pedal"
-              sublabel="shaded bands show CC64 pedal regions"
-              title="Visualize sustain pedal (CC64) on/off periods as semi-transparent bands in the falling notes view"
+              label="延音踏板"
+              sublabel="用阴影区域显示 CC64 踏板范围"
+              title="在瀑布流视图中用半透明区域显示延音踏板（CC64）的踩下与松开区间"
             >
               <Toggle
                 active={settings.showSustainPedal}
@@ -1181,9 +1181,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Sustained note ghost"
-              sublabel="ghost at keyboard while pedal is held"
-              title="Keep a faint ghost indicator for notes that have ended while the sustain pedal is still held"
+              label="延音残影"
+              sublabel="踏板保持时在键盘上显示残影"
+              title="延音踏板仍踩下时，为已结束的音符保留淡化残影"
             >
               <Toggle
                 active={settings.showSustainedNotes}
@@ -1192,33 +1192,33 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Impact effect"
-              sublabel="visual when notes hit the keyboard"
-              title="Choose the visual effect that plays when a note reaches the hit line"
+              label="触键特效"
+              sublabel="音符触及键盘时的视觉效果"
+              title="选择音符到达触键线时播放的视觉效果"
               stacked
             >
               <BtnGroup
-                aria-label="Impact effect style"
+                aria-label="触键特效样式"
                 options={[
                   {
                     value: "off" as ImpactStyle,
-                    label: "Off",
-                    title: "No visual effect on note impact",
+                    label: "关闭",
+                    title: "音符触键时不显示特效",
                   },
                   {
                     value: "bloom" as ImpactStyle,
-                    label: "Bloom",
-                    title: "Soft expanding ring (default)",
+                    label: "光晕",
+                    title: "柔和扩散光环（默认）",
                   },
                   {
                     value: "side" as ImpactStyle,
-                    label: "Side",
-                    title: "Particles burst left & right from note edges at impact",
+                    label: "侧向粒子",
+                    title: "触键时粒子从音符条两侧向外迸发",
                   },
                   {
                     value: "trail" as ImpactStyle,
-                    label: "Trail",
-                    title: "Sparkles drift off the bar sides as it falls",
+                    label: "拖尾",
+                    title: "音符下落时两侧产生闪光拖尾",
                   },
                 ]}
                 value={settings.impactStyle}
@@ -1228,11 +1228,11 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
           </Section>
 
           {/* ── Playback ───────────────────────────────────────────────────── */}
-          <Section title="Playback">
+          <Section title="播放">
             <Row
-              label="Note window"
-              sublabel="seconds of notes visible at once"
-              title="How many seconds of music are visible in the falling notes view at once. Lower = notes appear larger and slower."
+              label="音符视窗"
+              sublabel="一次可见的音符时间范围"
+              title="设置瀑布流视图一次显示多少秒的音乐。数值越小，音符看起来越大、下落越慢。"
               stacked
             >
               <div className="flex items-center gap-1.5">
@@ -1248,8 +1248,8 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                   step={0.5}
                   value={settings.viewportSeconds}
                   onChange={(e) => updateSettings({ viewportSeconds: Number(e.target.value) })}
-                  aria-label="Note window - seconds of music visible"
-                  aria-valuetext={`${settings.viewportSeconds} seconds`}
+                  aria-label="音符视窗——可见音乐秒数"
+                  aria-valuetext={`${settings.viewportSeconds} 秒`}
                   className="flex-1"
                   style={rangeStyle(settings.viewportSeconds, 2, 10)}
                 />
@@ -1273,9 +1273,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Transpose"
-              sublabel="shift all notes by semitones"
-              title="Shift all notes up or down by semitones. Affects both audio playback and display."
+              label="移调"
+              sublabel="按半音整体移动所有音符"
+              title="按半音向上或向下移动所有音符，同时影响声音播放与显示。"
               stacked
             >
               <div className="flex items-center gap-1.5">
@@ -1291,7 +1291,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                   step={1}
                   value={settings.transposeSemitones}
                   onChange={(e) => updateSettings({ transposeSemitones: Number(e.target.value) })}
-                  aria-label="Transpose in semitones"
+                  aria-label="移调（半音）"
                   aria-valuetext={formatTranspose(settings.transposeSemitones)}
                   className="flex-1"
                   style={rangeStyle(settings.transposeSemitones, -6, 6)}
@@ -1318,9 +1318,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Audio offset"
-              sublabel="compensate for audio interface latency"
-              title="Shift audio scheduling by ±ms. Positive values play audio earlier - use this if you hear notes after the visual cue due to interface or Bluetooth latency."
+              label="音频偏移"
+              sublabel="补偿音频设备延迟"
+              title="以毫秒调整音频调度。正值会让声音更早播放；如果因声卡或蓝牙延迟导致声音晚于画面，可使用此项补偿。"
               stacked
             >
               <div className="flex items-center gap-1.5">
@@ -1336,7 +1336,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                   step={5}
                   value={settings.renderOffset}
                   onChange={(e) => updateSettings({ renderOffset: Number(e.target.value) })}
-                  aria-label="Audio offset in milliseconds"
+                  aria-label="音频偏移（毫秒）"
                   aria-valuetext={`${settings.renderOffset}ms`}
                   className="flex-1"
                   style={rangeStyle(settings.renderOffset, -200, 200)}
@@ -1362,9 +1362,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Scroll to seek"
-              sublabel="mouse wheel scrubs playback position"
-              title="When enabled, scrolling the mouse wheel on the falling notes canvas moves the playback position forward or backward"
+              label="滚轮定位"
+              sublabel="用鼠标滚轮调整播放位置"
+              title="启用后，在瀑布流画布上滚动鼠标滚轮可前后调整播放位置"
             >
               <Toggle
                 active={settings.scrollToSeek}
@@ -1373,13 +1373,13 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Instrument"
-              sublabel="sound used for playback"
-              title="The instrument sound used when playing back notes. Switching loads new samples from the CDN."
+              label="音色"
+              sublabel="播放时使用的乐器音色"
+              title="选择播放音符时使用的乐器音色。切换音色时会从 CDN 加载新的采样。"
               stacked
             >
               <BtnGroup
-                aria-label="Instrument"
+                aria-label="音色"
                 options={INSTRUMENT_OPTIONS}
                 value={settings.instrument}
                 onChange={(v) => updateSettings({ instrument: v as InstrumentId })}
@@ -1387,33 +1387,33 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
               />
             </Row>
 
-            <SubHeader>Practice</SubHeader>
+            <SubHeader>练习</SubHeader>
 
             <Row
-              label="Wait hand"
-              sublabel="which hand triggers wait mode pauses"
-              title="When Wait mode is active, choose which hand's notes cause playback to pause until you play them"
+              label="等待模式手部"
+              sublabel="选择哪只手触发等待暂停"
+              title="等待模式开启时，选择哪只手的音符会让播放暂停，直到你弹出这些音符"
               stacked
             >
               <BtnGroup
-                aria-label="Wait mode hand"
+                aria-label="等待模式手部"
                 options={[
                   {
                     value: "left" as const,
-                    label: "Left",
+                    label: "左手",
                     title:
-                      "Pause only for left hand notes - right hand plays through automatically",
+                      "仅等待左手音符，右手声部会自动继续播放",
                   },
                   {
                     value: "both" as const,
-                    label: "Both",
-                    title: "Pause for both hands (default)",
+                    label: "双手",
+                    title: "等待双手音符（默认）",
                   },
                   {
                     value: "right" as const,
-                    label: "Right",
+                    label: "右手",
                     title:
-                      "Pause only for right hand notes - left hand plays through automatically",
+                      "仅等待右手音符，左手声部会自动继续播放",
                   },
                 ]}
                 value={settings.waitForHand}
@@ -1423,9 +1423,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Hand volumes"
-              sublabel="balance each hand independently"
-              title="Reduce a hand's volume without muting it - useful when drilling the other hand"
+              label="左右手音量"
+              sublabel="分别调整左右手音量"
+              title="降低某只手的音量而不完全静音，适合专项练习另一只手"
               stacked
             >
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -1439,7 +1439,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                         flexShrink: 0,
                       }}
                     >
-                      {hand === "left" ? "Left" : "Right"}
+                      {hand === "left" ? "左手" : "右手"}
                     </span>
                     <input
                       type="range"
@@ -1452,7 +1452,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                           handVolume: { ...settings.handVolume, [hand]: Number(e.target.value) },
                         })
                       }
-                      aria-label={`${hand === "left" ? "Left" : "Right"} hand volume`}
+                      aria-label={`${hand === "left" ? "左手" : "右手"}音量`}
                       aria-valuetext={`${Math.round(settings.handVolume[hand] * 100)}%`}
                       className="flex-1"
                       style={rangeStyle(settings.handVolume[hand], 0, 1)}
@@ -1474,17 +1474,17 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Count-in bars"
-              sublabel="silent bars before playback starts"
-              title="Number of metronome bars to count before playback begins. Useful for getting your hands ready."
+              label="预备小节"
+              sublabel="播放前的静音预备小节"
+              title="设置播放开始前由节拍器预备多少小节，方便做好起奏准备。"
               stacked
             >
               <BtnGroup
-                aria-label="Count-in bars"
+                aria-label="预备小节"
                 options={[
-                  { value: 0 as const, label: "0 bars", title: "No count-in - start immediately" },
-                  { value: 1 as const, label: "1 bar", title: "One bar count-in" },
-                  { value: 2 as const, label: "2 bars", title: "Two bars count-in" },
+                  { value: 0 as const, label: "0 小节", title: "不预备，立即开始" },
+                  { value: 1 as const, label: "1 小节", title: "预备 1 小节" },
+                  { value: 2 as const, label: "2 小节", title: "预备 2 小节" },
                 ]}
                 value={settings.countInBars}
                 onChange={(v) => updateSettings({ countInBars: v as 0 | 1 | 2 })}
@@ -1493,9 +1493,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             </Row>
 
             <Row
-              label="Speed trainer"
-              sublabel="ramps tempo up after each loop pass"
-              title="Automatically increase tempo after each complete loop pass, stepping from Start% up to End%"
+              label="速度训练"
+              sublabel="每轮循环后逐步提速"
+              title="每次完成循环后自动提高速度，从起始速度逐步提升到目标速度"
             >
               <Toggle
                 active={settings.speedTrainer.enabled}
@@ -1514,9 +1514,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             {settings.speedTrainer.enabled && (
               <>
                 <Row
-                  label="Start speed"
-                  sublabel="Tempo % when trainer begins"
-                  title="Tempo percentage to start from when the speed trainer resets"
+                  label="起始速度"
+                  sublabel="速度训练开始时的速度百分比"
+                  title="速度训练重置时的起始速度百分比"
                   stacked
                 >
                   <div className="flex items-center gap-1.5">
@@ -1543,7 +1543,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                           },
                         })
                       }
-                      aria-label="Speed trainer start percentage"
+                      aria-label="速度训练起始百分比"
                       aria-valuetext={`${settings.speedTrainer.startPct}%`}
                       className="flex-1"
                       style={rangeStyle(settings.speedTrainer.startPct, 25, 100)}
@@ -1572,9 +1572,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                 </Row>
 
                 <Row
-                  label="End speed"
-                  sublabel="Maximum tempo % to reach"
-                  title="Maximum tempo percentage the speed trainer will reach (100 = full speed)"
+                  label="目标速度"
+                  sublabel="训练要达到的最大速度百分比"
+                  title="速度训练可达到的最高速度百分比（100 = 原速）"
                   stacked
                 >
                   <div className="flex items-center gap-1.5">
@@ -1601,7 +1601,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                           },
                         })
                       }
-                      aria-label="Speed trainer end percentage"
+                      aria-label="速度训练目标百分比"
                       aria-valuetext={`${settings.speedTrainer.endPct}%`}
                       className="flex-1"
                       style={rangeStyle(settings.speedTrainer.endPct, 50, 200)}
@@ -1630,9 +1630,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                 </Row>
 
                 <Row
-                  label="Step"
-                  sublabel="% added per loop pass"
-                  title="How many percentage points to add to the tempo after each complete loop pass"
+                  label="步进幅度"
+                  sublabel="每轮循环增加的百分比"
+                  title="每完成一轮循环后增加多少个百分点的速度"
                   stacked
                 >
                   <div className="flex items-center gap-1.5">
@@ -1659,7 +1659,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                           },
                         })
                       }
-                      aria-label="Speed trainer step percentage"
+                      aria-label="速度训练步进百分比"
                       aria-valuetext={`${settings.speedTrainer.stepPct}%`}
                       className="flex-1"
                       style={rangeStyle(settings.speedTrainer.stepPct, 1, 20)}

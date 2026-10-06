@@ -108,6 +108,9 @@ body,
   color: var(--color-text);
   font-family:
     "Space Grotesk",
+    "Noto Sans SC",
+    "Microsoft YaHei",
+    "PingFang SC",
     system-ui,
     -apple-system,
     sans-serif;

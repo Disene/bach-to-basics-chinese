@@ -428,7 +428,7 @@ def _to_pdf(musicxml: str) -> str:
 
         if result.returncode != 0 or not Path(pdf_tmp_name).exists():
             logger.error("LilyPond failed: %s", result.stderr.decode(errors="replace")[:500])
-            raise RuntimeError("LilyPond PDF rendering failed")
+            raise RuntimeError("LilyPond PDF 渲染失败")
 
         # Caller (export_routes) owns cleanup via BackgroundTask
         pdf_tmp_name = None   # transfer ownership, don't clean up in finally

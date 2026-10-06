@@ -142,7 +142,7 @@ export function TransportControls() {
         <span
           className="text-xs tabular-nums w-9 shrink-0 text-right"
           style={{ color: "var(--color-text-muted)", paddingLeft: 12 }}
-          aria-label="current time"
+          aria-label="当前时间"
         >
           {formatTime(currentSeconds)}
         </span>
@@ -153,7 +153,7 @@ export function TransportControls() {
           style={{ padding: "8px 0", margin: "-8px 0" }}
           onClick={handleProgressClick}
           role="slider"
-          aria-label="Playback position"
+          aria-label="播放进度"
           aria-valuenow={Math.round(progress * 100)}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -200,7 +200,7 @@ export function TransportControls() {
         <span
           className="text-xs tabular-nums w-9 shrink-0"
           style={{ color: "var(--color-text-muted)", paddingRight: 12 }}
-          aria-label="total duration"
+          aria-label="总时长"
         >
           {formatTime(total)}
         </span>
@@ -213,8 +213,8 @@ export function TransportControls() {
       >
         {/* ── Zone 1: File import - accent-styled to stand out ── */}
         <label
-          title="Open MIDI, MusicXML, PDF sheet music, or audio recording (MP3/WAV/etc.)"
-          aria-label="Import MIDI, MusicXML, PDF, or audio file"
+          title="打开 MIDI、MusicXML、PDF 乐谱或音频文件（MP3/WAV 等）"
+          aria-label="导入 MIDI、MusicXML、PDF 或音频文件"
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -243,7 +243,7 @@ export function TransportControls() {
           {isLoadingDocument && loadingMessage ? (
             <span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>{loadingMessage}</span>
           ) : (
-            <span>Import</span>
+            <span>导入</span>
           )}
           <input
             type="file"
@@ -262,9 +262,9 @@ export function TransportControls() {
           <button
             onClick={toggleExport}
             title={
-              doc ? "Save the current score in another format" : "Load a file to enable export"
+              doc ? "将当前乐谱保存为其他格式" : "请先加载文件后再导出"
             }
-            aria-label="Export current score"
+            aria-label="导出当前乐谱"
             aria-haspopup="menu"
             aria-expanded={exportOpen}
             disabled={!doc}
@@ -321,7 +321,7 @@ export function TransportControls() {
                   exportMidi();
                   setExportOpen(false);
                 }}
-                disabledReason="No MIDI data in this document"
+                disabledReason="当前乐谱没有 MIDI 数据"
               />
               <ExportMenuItem
                 label="MusicXML"
@@ -331,30 +331,30 @@ export function TransportControls() {
                   exportMusicXml();
                   setExportOpen(false);
                 }}
-                disabledReason="No MusicXML data in this document"
+                disabledReason="当前乐谱没有 MusicXML 数据"
               />
               <ExportMenuItem
-                label="PDF sheet music"
-                sublabel={isExportingPdf ? "rendering..." : ".pdf"}
+                label="PDF 乐谱"
+                sublabel={isExportingPdf ? "渲染中…" : ".pdf"}
                 enabled={!!doc?.musicXml && !isExportingPdf}
                 onClick={() => {
                   void exportPdf();
                   setExportOpen(false);
                 }}
                 disabledReason={
-                  !doc?.musicXml ? "No MusicXML data in this document" : "Already rendering a PDF"
+                  !doc?.musicXml ? "当前乐谱没有 MusicXML 数据" : "PDF 正在渲染中"
                 }
               />
               <ExportMenuItem
-                label="MP3 audio"
-                sublabel={isExportingMp3 ? "rendering..." : ".mp3"}
+                label="MP3 音频"
+                sublabel={isExportingMp3 ? "渲染中…" : ".mp3"}
                 enabled={!!doc?.notes?.length && !isExportingMp3}
                 onClick={() => {
                   void exportMp3();
                   setExportOpen(false);
                 }}
                 disabledReason={
-                  !doc?.notes?.length ? "No notes to render" : "Already rendering an MP3"
+                  !doc?.notes?.length ? "没有可渲染的音符" : "MP3 正在渲染中"
                 }
               />
             </div>
@@ -367,16 +367,16 @@ export function TransportControls() {
         <div className="flex items-center shrink-0" style={{ gap: 4 }}>
           <Btn
             onClick={stop}
-            title="Stop and return to start"
-            aria-label="Stop"
+            title="停止并返回开头"
+            aria-label="停止"
             disabled={isStopped}
           >
             <StopIcon />
           </Btn>
           <Btn
             onClick={() => syncEngine.skipBy(-10)}
-            title="Skip back 10 seconds"
-            aria-label="Skip back 10 seconds"
+            title="后退 10 秒"
+            aria-label="后退 10 秒"
             disabled={!doc}
           >
             <SkipBackIcon />
@@ -384,16 +384,16 @@ export function TransportControls() {
           <Btn
             primary
             onClick={isPlaying ? pause : () => play()}
-            title={isPlaying ? "Pause" : isPaused ? "Resume" : "Play"}
-            aria-label={isPlaying ? "Pause" : isPaused ? "Resume playback" : "Play"}
+            title={isPlaying ? "暂停" : isPaused ? "继续" : "播放"}
+            aria-label={isPlaying ? "暂停" : isPaused ? "继续播放" : "播放"}
             disabled={!doc}
           >
             {isPlaying ? <PauseIcon /> : <PlayIcon />}
           </Btn>
           <Btn
             onClick={() => syncEngine.skipBy(10)}
-            title="Skip forward 10 seconds"
-            aria-label="Skip forward 10 seconds"
+            title="前进 10 秒"
+            aria-label="前进 10 秒"
             disabled={!doc}
           >
             <SkipFwdIcon />
@@ -411,8 +411,8 @@ export function TransportControls() {
               <button
                 key={h}
                 onClick={() => toggleHand(h)}
-                title={`${active ? "Mute" : "Unmute"} ${h} hand`}
-                aria-label={`${active ? "Mute" : "Unmute"} ${h} hand`}
+                title={`${active ? "静音" : "取消静音"}${h === "left" ? "左手" : "右手"}`}
+                aria-label={`${active ? "静音" : "取消静音"}${h === "left" ? "左手" : "右手"}`}
                 aria-pressed={active}
                 className="rounded text-xs font-bold transition-all"
                 style={{
@@ -440,7 +440,7 @@ export function TransportControls() {
                       }),
                 }}
               >
-                {isLeft ? "L" : "R"}
+                {isLeft ? "左" : "右"}
               </button>
             );
           })}
@@ -454,11 +454,11 @@ export function TransportControls() {
           <ChipBtn
             active={waitMode}
             onClick={() => setWaitMode(!waitMode)}
-            title="Pause until you play the correct note"
-            aria-label="Wait mode"
+            title="播放将暂停，直到你弹对音符"
+            aria-label="等待模式"
             aria-pressed={waitMode}
           >
-            <WaitIcon /> Wait
+            <WaitIcon /> 等待
           </ChipBtn>
 
           {/* ── A / Loop / B - single compound grouped control ── */}
@@ -475,8 +475,8 @@ export function TransportControls() {
             <button
               onClick={setLoopA}
               disabled={!loopActive}
-              title="Set loop start (A) to current position"
-              aria-label="Set loop start to current position"
+              title="将当前位置设为循环起点（A）"
+              aria-label="将当前位置设为循环起点"
               style={{
                 height: 28,
                 padding: "0 8px",
@@ -499,8 +499,8 @@ export function TransportControls() {
             <button
               onClick={loopActive ? clearLoop : startLoop}
               disabled={!doc}
-              title={loopActive ? "Clear loop" : "Start A/B loop from current position"}
-              aria-label={loopActive ? "Clear loop" : "Start loop"}
+              title={loopActive ? "清除循环" : "从当前位置开始 A/B 循环"}
+              aria-label={loopActive ? "清除循环" : "开始循环"}
               aria-pressed={loopActive}
               style={{
                 height: 28,
@@ -519,15 +519,15 @@ export function TransportControls() {
               }}
             >
               <LoopIcon />
-              {loopActive ? `${formatTime(loopStart!)}-${formatTime(loopEnd!)}` : "Loop"}
+              {loopActive ? `${formatTime(loopStart!)}-${formatTime(loopEnd!)}` : "循环"}
             </button>
 
             {/* B marker */}
             <button
               onClick={setLoopB}
               disabled={!loopActive}
-              title="Set loop end (B) to current position"
-              aria-label="Set loop end to current position"
+              title="将当前位置设为循环终点（B）"
+              aria-label="将当前位置设为循环终点"
               style={{
                 height: 28,
                 padding: "0 8px",
@@ -550,11 +550,11 @@ export function TransportControls() {
           <ChipBtn
             active={settings.metronomeEnabled}
             onClick={() => setMetronome(!settings.metronomeEnabled)}
-            title="Metronome (auto-syncs to MIDI BPM)"
-            aria-label="Toggle metronome"
+            title="节拍器（自动同步 MIDI BPM）"
+            aria-label="开关节拍器"
             aria-pressed={settings.metronomeEnabled}
           >
-            <MetronomeIcon /> Metronome
+            <MetronomeIcon /> 节拍器
           </ChipBtn>
 
           {/* ── Speed chip with popover ─────────────────────────── */}
@@ -562,12 +562,12 @@ export function TransportControls() {
             <ChipBtn
               active={tempoMultiplier !== 1.0 || speedOpen}
               onClick={toggleSpeed}
-              title="Playback speed"
-              aria-label="Playback speed"
+              title="播放速度"
+              aria-label="播放速度"
               aria-pressed={speedOpen}
             >
               <SpeedIcon />
-              {tempoMultiplier !== 1.0 ? `${Math.round(tempoMultiplier * 100)}%` : "Speed"}
+              {tempoMultiplier !== 1.0 ? `${Math.round(tempoMultiplier * 100)}%` : "速度"}
             </ChipBtn>
 
             {speedOpen && speedRect && (
@@ -594,7 +594,7 @@ export function TransportControls() {
                   }}
                 >
                   <span style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text)" }}>
-                    Playback Speed
+                    播放速度
                   </span>
                   <span
                     style={{
@@ -614,7 +614,7 @@ export function TransportControls() {
                   step={5}
                   value={Math.round(tempoMultiplier * 100)}
                   onChange={(e) => setTempoMultiplier(Number(e.target.value) / 100)}
-                  aria-label="Playback speed"
+                  aria-label="播放速度"
                   style={{ width: "100%", accentColor: "var(--color-accent)" }}
                 />
                 <div
@@ -647,7 +647,7 @@ export function TransportControls() {
                       cursor: "pointer",
                     }}
                   >
-                    Reset to 100%
+                    重置为 100%
                   </button>
                 )}
               </div>
@@ -661,9 +661,9 @@ export function TransportControls() {
             className="text-xs animate-pulse ml-1 shrink-0"
             style={{ color: "var(--color-accent)" }}
             aria-live="polite"
-            aria-label="Waiting for you to play the correct note"
+            aria-label="等待你弹奏正确的音符"
           >
-            ● Waiting…
+            ● 等待演奏…
           </span>
         )}
       </div>
@@ -778,7 +778,7 @@ function ExportMenuItem({
       role="menuitem"
       onClick={enabled ? onClick : undefined}
       disabled={!enabled}
-      title={enabled ? `Save as ${sublabel}` : disabledReason}
+      title={enabled ? `另存为 ${sublabel}` : disabledReason}
       style={{
         display: "flex",
         alignItems: "baseline",

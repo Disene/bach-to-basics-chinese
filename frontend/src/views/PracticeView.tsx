@@ -12,17 +12,17 @@ import { midiToPitch, keySignatureToLabel } from "@bach-to-basics/shared";
 import { syncEngine } from "../engine/SyncEngine";
 
 const TAB_LABELS: Record<LayoutMode, string> = {
-  piano: "Piano",
-  falling: "Notes",
-  sheet: "Sheet",
-  all: "All",
+  piano: "钢琴",
+  falling: "瀑布流",
+  sheet: "乐谱",
+  all: "全部",
 };
 
 const TAB_TITLES: Record<LayoutMode, string> = {
-  piano: "Show only the piano keyboard view",
-  falling: "Show only the falling notes view",
-  sheet: "Show only the sheet music view",
-  all: "Show all views at once",
+  piano: "仅显示钢琴键盘视图",
+  falling: "仅显示瀑布流音符视图",
+  sheet: "仅显示乐谱视图",
+  all: "同时显示全部视图",
 };
 
 export function PracticeView() {
@@ -189,7 +189,7 @@ export function PracticeView() {
               to
             </span>
             <span style={{ fontWeight: 700, color: "var(--color-text)" }}>Basics</span>
-            <span className="sr-only"> on GitHub</span>
+            <span className="sr-only">（GitHub）</span>
           </span>
         </a>
 
@@ -236,8 +236,8 @@ export function PracticeView() {
           <DevicePanel />
           <button
             onClick={() => updateSettings({ theme: settings.theme === "dark" ? "light" : "dark" })}
-            title={settings.theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            aria-label={settings.theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={settings.theme === "dark" ? "切换到浅色模式" : "切换到深色模式"}
+            aria-label={settings.theme === "dark" ? "切换到浅色模式" : "切换到深色模式"}
             className="flex items-center justify-center rounded transition-colors shrink-0"
             style={{
               width: 30,
@@ -251,8 +251,8 @@ export function PracticeView() {
           </button>
           <button
             onClick={() => setSettingsOpen(true)}
-            title="Settings"
-            aria-label="Open settings"
+            title="设置"
+            aria-label="打开设置"
             className="flex items-center justify-center rounded transition-colors shrink-0"
             style={{
               width: 30,
@@ -377,10 +377,10 @@ function EmptyState({ onImport }: { onImport: (file: File) => void }) {
 
       <div style={{ maxWidth: 300 }}>
         <div style={{ fontSize: 18, fontWeight: 700, color: "var(--color-text)", marginBottom: 8 }}>
-          No file loaded
+          尚未加载文件
         </div>
         <div style={{ fontSize: 13, color: "var(--color-text-muted)", lineHeight: 1.6 }}>
-          Import a MIDI, MusicXML, PDF sheet music, or audio recording to start practicing
+          导入 MIDI、MusicXML、PDF 乐谱或音频文件，即可开始练习
         </div>
       </div>
 
@@ -414,11 +414,11 @@ function EmptyState({ onImport }: { onImport: (file: File) => void }) {
         }}
       >
         <UploadIconLg />
-        Import a file
+        导入文件
       </button>
 
       <span style={{ fontSize: 11, color: "var(--color-text-muted)", marginTop: -10 }}>
-        or drag &amp; drop anywhere
+        也可以将文件拖放到页面任意位置
       </span>
 
       <input
@@ -596,7 +596,7 @@ function StatusBar() {
         <>
           {isActive && (
             <span style={{ color: "var(--color-accent)", fontWeight: 600, flexShrink: 0 }}>
-              Playing
+              播放中
             </span>
           )}
           <span className="truncate" style={{ minWidth: 0 }}>
@@ -624,7 +624,7 @@ function StatusBar() {
           )}
         </>
       ) : (
-        <span>No file loaded - drag &amp; drop or click ↑ Import</span>
+        <span>尚未加载文件——拖放文件或点击 ↑ 导入</span>
       )}
       <div className="flex-1 min-w-0" />
       {doc && (
@@ -686,7 +686,7 @@ function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => 
       </span>
       <button
         onClick={onDismiss}
-        aria-label="Dismiss error"
+        aria-label="关闭错误提示"
         style={{
           background: "none",
           border: "none",

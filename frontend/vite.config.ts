@@ -21,7 +21,7 @@ export default defineConfig({
         name: "Bach to Basics",
         short_name: "Bach to Basics",
         description:
-          "Browser-based piano practice tool - falling notes, sheet music, MIDI, and practice tools",
+          "浏览器端钢琴练习工具——瀑布流音符、乐谱、MIDI 与多种练习功能",
         theme_color: "#9333ea", // matches the purple accent
         background_color: "#0a0a0a",
         display: "standalone",

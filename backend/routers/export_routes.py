@@ -47,7 +47,7 @@ def _rm(path: str) -> None:
 async def export_pdf(req: ExportPdfRequest, background_tasks: BackgroundTasks):
     """Convert MusicXML to PDF sheet music."""
     if len(req.musicxml.encode()) > MAX_MUSICXML_BYTES:
-        raise HTTPException(status_code=413, detail="MusicXML payload too large (max 10 MB)")
+        raise HTTPException(status_code=413, detail="MusicXML 数据过大（最大 10 MB）")
     try:
         from services.music21_svc import musicxml_to_pdf
         pdf_path = await musicxml_to_pdf(req.musicxml)
@@ -76,13 +76,13 @@ async def export_pdf(req: ExportPdfRequest, background_tasks: BackgroundTasks):
             raise HTTPException(
                 status_code=503,
                 detail=(
-                    "PDF export needs LilyPond on the backend (not bundled by default).\n\n"
-                    "Quick install: brew install lilypond (macOS) or apt install lilypond "
-                    "(Linux). For Docker, see the README section 'Optional: PDF export via "
-                    "LilyPond'. MIDI and MusicXML export work without it."
+                    "PDF 导出需要后端安装 LilyPond（默认未包含）。\n\n"
+                    "快速安装：macOS 运行 brew install lilypond，Linux 运行 apt install lilypond。"
+                    "Docker 请参阅 README 的“Optional: PDF export via LilyPond”章节。"
+                    "未安装 LilyPond 时，MIDI 和 MusicXML 导出仍可使用。"
                 ),
             )
-        raise HTTPException(status_code=500, detail=f"PDF export failed: {msg or 'Unknown error'}")
+        raise HTTPException(status_code=500, detail=f"PDF 导出失败：{msg or '未知错误'}")
 
 
 @router.post("/mp3")
@@ -90,20 +90,20 @@ async def export_mp3(req: ExportMp3Request, background_tasks: BackgroundTasks):
     """Convert base64 WAV to MP3 using FFmpeg."""
     # L6 - size-check before decoding; catch malformed base64 explicitly
     if len(req.wav_base64) > MAX_B64_BYTES:
-        raise HTTPException(status_code=413, detail="WAV payload too large (max 200 MB)")
+        raise HTTPException(status_code=413, detail="WAV 数据过大（最大 200 MB）")
 
     try:
         wav_bytes = base64.b64decode(req.wav_base64, validate=True)
     except binascii.Error:
-        raise HTTPException(status_code=422, detail="Invalid base64 encoding")
+        raise HTTPException(status_code=422, detail="Base64 编码无效")
 
     # C2 - check decoded size too
     if len(wav_bytes) > MAX_WAV_BYTES:
-        raise HTTPException(status_code=413, detail="WAV data too large (max 200 MB)")
+        raise HTTPException(status_code=413, detail="WAV 数据过大（最大 200 MB）")
 
     # M5 - validate WAV magic bytes: "RIFF....WAVE"
     if len(wav_bytes) < 12 or wav_bytes[:4] != _WAV_RIFF or wav_bytes[8:12] != _WAV_WAVE:
-        raise HTTPException(status_code=422, detail="Not a valid WAV file")
+        raise HTTPException(status_code=422, detail="不是有效的 WAV 文件")
 
     try:
         wav_tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
@@ -130,7 +130,7 @@ async def export_mp3(req: ExportMp3Request, background_tasks: BackgroundTasks):
         )
         if result.returncode != 0:
             logger.error("ffmpeg failed: %s", result.stderr.decode(errors="replace")[:500])
-            raise RuntimeError("ffmpeg conversion failed")
+            raise RuntimeError("ffmpeg 转换失败")
 
         return FileResponse(
             mp3_tmp.name,
@@ -145,4 +145,4 @@ async def export_mp3(req: ExportMp3Request, background_tasks: BackgroundTasks):
         raise
     except Exception:
         logger.exception("export_mp3 failed")
-        raise HTTPException(status_code=500, detail="MP3 export failed. Please try again.")
+        raise HTTPException(status_code=500, detail="MP3 导出失败，请重试。")
