@@ -60,10 +60,10 @@ def _require_api_key(key: str | None = Security(_API_KEY_HEADER)) -> None:
         return  # auth genuinely not configured (dev mode)
     if not expected:
         # Empty string = broken deployment config; reject loudly
-        raise HTTPException(status_code=500, detail="Server authentication misconfigured")
+        raise HTTPException(status_code=500, detail="服务器身份验证配置错误")
     # T2-2: constant-time comparison prevents timing-based key extraction
     if not hmac.compare_digest(key or "", expected):
-        raise HTTPException(status_code=403, detail="Forbidden")
+        raise HTTPException(status_code=403, detail="无权访问")
 
 
 # ── Startup checks ────────────────────────────────────────────────────────────

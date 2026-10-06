@@ -21,7 +21,7 @@ class FingeringRequest(BaseModel):
 async def generate_fingering(req: FingeringRequest):
     """Run pianoplayer Parncutt algorithm on MusicXML, returns annotated MusicXML."""
     if len(req.musicxml.encode()) > MAX_MUSICXML_BYTES:
-        raise HTTPException(status_code=413, detail="MusicXML payload too large (max 10 MB)")
+        raise HTTPException(status_code=413, detail="MusicXML 数据过大（最大 10 MB）")
     try:
         from services.pianoplayer_svc import annotate_fingering
         annotated = await annotate_fingering(req.musicxml)
@@ -35,5 +35,5 @@ async def generate_fingering(req: FingeringRequest):
         logger.exception("generate_fingering failed")
         raise HTTPException(
             status_code=500,
-            detail="Fingering generation failed. Please try again.",
+            detail="指法生成失败，请重试。",
         )

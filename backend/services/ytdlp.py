@@ -50,10 +50,10 @@ def _download(url: str) -> tuple[Path, str]:
             result.returncode,
             result.stderr.decode(errors="replace")[:500],
         )
-        raise RuntimeError("Audio download failed")
+        raise RuntimeError("音频下载失败")
 
     mp3_files = list(Path(tmpdir).glob("*.mp3"))
     if not mp3_files:
-        raise RuntimeError("Audio download produced no output")
+        raise RuntimeError("音频下载没有生成输出文件")
 
     return mp3_files[0], tmpdir

@@ -43,7 +43,7 @@ async def _read_with_limit(file: UploadFile, max_bytes: int = MAX_UPLOAD_BYTES) 
             break
         total += len(chunk)
         if total > max_bytes:
-            raise HTTPException(status_code=413, detail="Upload too large (max 50 MB)")
+            raise HTTPException(status_code=413, detail="上传文件过大（最大 50 MB）")
         chunks.append(chunk)
     return b"".join(chunks)
 
@@ -53,13 +53,13 @@ def _check_ext(filename: str, allowed: set[str]) -> None:
     if ext not in allowed:
         raise HTTPException(
             status_code=422,
-            detail=f"Unsupported file type. Allowed: {', '.join(sorted(allowed))}",
+            detail=f"不支持的文件类型。允许：{', '.join(sorted(allowed))}",
         )
 
 
 def _check_midi_magic(data: bytes) -> None:
     if not data.startswith(_MIDI_MAGIC):
-        raise HTTPException(status_code=422, detail="Not a valid MIDI file")
+        raise HTTPException(status_code=422, detail="不是有效的 MIDI 文件")
 
 
 def _safe_title(raw: str) -> str:
@@ -97,7 +97,7 @@ async def midi_to_musicxml(file: UploadFile, title: str = Query(default="")):
         raise
     except Exception:
         logger.exception("midi_to_musicxml failed")
-        raise HTTPException(status_code=500, detail="Conversion failed. Please try again.")
+        raise HTTPException(status_code=500, detail="转换失败，请重试。")
 
 
 @router.post("/musicxml2midi")
@@ -129,7 +129,7 @@ async def musicxml_to_midi(file: UploadFile, background_tasks: BackgroundTasks):
         raise
     except Exception:
         logger.exception("musicxml_to_midi failed")
-        raise HTTPException(status_code=500, detail="Conversion failed. Please try again.")
+        raise HTTPException(status_code=500, detail="转换失败，请重试。")
 
 
 @router.post("/mp3")
@@ -180,5 +180,5 @@ async def transcribe_mp3(file: UploadFile, background_tasks: BackgroundTasks):
                 ),
             )
         raise HTTPException(
-            status_code=500, detail=f"Transcription failed: {msg or 'Unknown error'}"
+            status_code=500, detail=f"音频转录失败：{msg or '未知错误'}"
         )
