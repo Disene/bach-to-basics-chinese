@@ -1,0 +1,14 @@
+/* These two five-choice controls retain the complete note-label names.
+ * Keep the scope on their existing accessible names: the shared BtnGroup also
+ * renders instrument, hand, filter and count-in controls, which must not change.
+ * The important declarations override only BtnGroup's existing inline sizing.
+ */
+[role="radiogroup"][aria-label="键盘音名标签模式"] > [role="radio"],
+[role="radiogroup"][aria-label="瀑布流音符条标签模式"] > [role="radio"] {
+  padding-inline: 4px !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
