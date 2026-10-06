@@ -49,6 +49,14 @@ docker compose up -d --no-deps backend
 
 These are validation commands, not completed results. After the launcher check, verify actual MusicXML output from a clear authorized staff-notation page and inspect pitches, durations, voices, and repeats.
 
+## OCR 文字识别边界 / Text OCR boundary
+
+官方现代安装包不预装 OCR 语言数据；没有语言数据时，Audiveris 官方说明可以继续处理乐谱，但会跳过 TEXTS 步骤。本候选尚未增加语言数据预装，因此不要把“命令能启动”或“输出了音符”描述为歌词、标题和教材文字标记都能识别。需要文字识别时，另行验证匹配 Tesseract legacy 模式的数据文件以及非 root 用户使用的 `tessdata` 路径；不要直接假定任意系统 OCR 语言包都兼容。
+
+Modern official installers do not preinstall OCR language data. Audiveris documents that score processing can continue without it, but the TEXTS step is skipped. This candidate does not yet preinstall language data. A working launcher or recognized notes does not prove support for lyrics, titles, or textbook text annotations. Text recognition additionally requires compatible Tesseract legacy language data and a validated `tessdata` location for the non-root runtime user.
+
+Official reference: https://audiveris.github.io/audiveris/_pages/guides/main/languages/
+
 ## 行为与限制 / Behavior and limits
 
 - 只在构建阶段从官方地址下载，校验 SHA-256 后安装。失败会使构建失败，不会假装 PDF 功能可用。运行时不联网安装软件。
