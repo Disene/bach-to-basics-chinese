@@ -138,6 +138,8 @@ export interface AppState {
   // ── MIDI device ──────────────────────────────────────────────────────────
   midiDeviceName: string | null;
   midiEnabled: boolean;
+  /** Real-time CC64 state from the connected MIDI device. */
+  sustainPedalDown: boolean;
 
   // ── Actions ──────────────────────────────────────────────────────────────
   loadMidiFile: (file: File) => Promise<void>;
@@ -263,6 +265,7 @@ export const useAppStore = create<AppState>((set, get) => {
       loopStart: s.loopStart,
       loopEnd: s.loopEnd,
       waitMode: s.waitMode,
+      sustainPedalDown: s.sustainPedalDown,
     });
   });
 
@@ -294,6 +297,7 @@ export const useAppStore = create<AppState>((set, get) => {
     settings: DEFAULT_SETTINGS,
     midiDeviceName: null,
     midiEnabled: false,
+    sustainPedalDown: false,
 
     loadMidiFile: async (file: File) => {
       set({ isLoadingDocument: true, loadError: null });
