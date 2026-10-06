@@ -32,6 +32,8 @@ export interface SyncEngineState {
   activeHands: Set<"left" | "right">;
   metronomeEnabled: boolean;
   handVolume: { left: number; right: number };
+  /** Real-time CC64 state from the connected MIDI input. */
+  sustainPedalDown: boolean;
   /** Which hand(s) trigger wait-mode pauses. Only relevant when waitMode is on. */
   waitForHand: "left" | "right" | "both";
 }
@@ -54,6 +56,7 @@ export class SyncEngine {
     activeHands: new Set(["left", "right"]),
     metronomeEnabled: false,
     handVolume: { left: 1, right: 1 },
+    sustainPedalDown: false,
     waitForHand: "both",
   };
 
@@ -70,6 +73,8 @@ export class SyncEngine {
   // If the user releases a key before the load completes, the entry is removed
   // so the note never fires - preventing stuck/echoing notes.
   private pendingMidiPlays = new Set<number>();
+  // Notes physically released while CC64 is held remain sounding until pedal-up.
+  private sustainedInputMidis = new Set<number>();
 
   // Exact MIDI pitches the player must hit before wait-mode playback resumes.
   // Stored explicitly because noteIndex advances several seconds ahead for rendering/audio scheduling.
@@ -221,6 +226,7 @@ export class SyncEngine {
     this._cancelCountIn();
     this.clock.stop();
     this.audio.stopAll();
+    this.sustainedInputMidis.clear();
     this.stopAnimLoop();
     this.noteIndex = 0;
     this.activeNotes.clear();
@@ -397,13 +403,16 @@ export class SyncEngine {
     }
   }
 
-  /** Play a note through the audio engine immediately (for virtual keyboard clicks). */
+  /** Play a note through the audio engine immediately (for virtual/hardware keyboard input). */
   async playMidi(midi: number, velocity = 90) {
+    // Re-striking a pitch that is still ringing under sustain should replace the
+    // old voice instead of stacking indefinitely under the same MIDI stop id.
+    if (this.sustainedInputMidis.delete(midi)) this.audio.stopNote(midi);
+
     // Emit input:note:on synchronously so the key lights up with no delay.
     this.onMidiInput(midi, velocity);
     // Register this MIDI as pending. If stopMidi() fires before audio loads
-    // (user tapped quickly), the entry is removed and we skip the play call -
-    // preventing the "echo" where a note sustains after the key was released.
+    // (user tapped quickly), the entry is removed and we skip the play call.
     this.pendingMidiPlays.add(midi);
     await this.audio.load();
     if (this.pendingMidiPlays.has(midi)) {
@@ -414,8 +423,30 @@ export class SyncEngine {
 
   stopMidi(midi: number) {
     this.pendingMidiPlays.delete(midi); // cancel play if still loading
-    this.audio.stopNote(midi);
+    if (this._state.sustainPedalDown) {
+      this.sustainedInputMidis.add(midi);
+    } else {
+      this.audio.stopNote(midi);
+    }
+    // Physical key-up is still emitted immediately; sustain is represented
+    // separately by CC64 state rather than pretending the key remains held.
     this.onMidiInputOff(midi);
+  }
+
+  /** Update real-time CC64 state from a connected MIDI input device. */
+  setSustainPedal(down: boolean) {
+    if (this._state.sustainPedalDown === down) return;
+    this._state.sustainPedalDown = down;
+    bus.emit("input:sustain", { down });
+
+    if (!down && this.sustainedInputMidis.size > 0) {
+      for (const midi of this.sustainedInputMidis) this.audio.stopNote(midi);
+      this.sustainedInputMidis.clear();
+    }
+
+    // Pedal changes are input state, not a transport transition; notify React
+    // listeners without emitting a misleading transport:stateChange event.
+    for (const cb of this.stateListeners) cb({ ...this._state });
   }
 
   onMidiInputOff(midi: number) {
@@ -461,6 +492,23 @@ export class SyncEngine {
    * Applies transposition to a note, clamping to the 88-key range (A0-C8).
    * Returns the original note object unchanged if transposeSemitones is 0.
    */
+  /**
+   * Return the audible note-off time after applying the source MIDI's CC64 ranges.
+   * The visual key/note release still happens at note.endSeconds; only audio rings
+   * until the pedal-up boundary.
+   */
+  private sustainedEndSeconds(endSeconds: number): number {
+    const ranges = this.doc?.sustainRanges;
+    if (!ranges?.length) return endSeconds;
+    for (const range of ranges) {
+      if (range.startSeconds > endSeconds) break;
+      if (endSeconds >= range.startSeconds && endSeconds < range.endSeconds) {
+        return range.endSeconds;
+      }
+    }
+    return endSeconds;
+  }
+
   private transposeNote(note: NoteEvent): NoteEvent {
     if (this.transposeSemitones === 0) return note;
     const tMidi = Math.max(21, Math.min(108, note.midi + this.transposeSemitones));
@@ -597,10 +645,20 @@ export class SyncEngine {
           }
         }, `+${onDelay}`);
 
+        // Visual key-up follows the written note duration.
         Tone.getTransport().scheduleOnce(() => {
           bus.emit("note:off", tNote);
-          this.audio.stopNote(tNote.midi);
         }, `+${offDelay}`);
+
+        // Audio release follows source CC64 if the MIDI file contains sustain.
+        const sustainedEnd = this.sustainedEndSeconds(note.endSeconds);
+        const audioOffDelay = Math.max(
+          0,
+          (sustainedEnd - docSeconds) / tempoMultiplier - offsetSec
+        );
+        Tone.getTransport().scheduleOnce(() => {
+          this.audio.stopNote(tNote.midi, tNote.id);
+        }, `+${audioOffDelay}`);
       }
 
       this.noteIndex++;
