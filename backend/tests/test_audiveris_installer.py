@@ -2,7 +2,11 @@
 import hashlib
 import importlib.util
 import io
+import os
 from pathlib import Path
+import shutil
+import stat
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -91,6 +95,119 @@ class InstallerTests(unittest.TestCase):
         with patch("sys.argv", ["install_audiveris.py"]), patch.object(installer, "install") as install, patch("sys.stdout", new_callable=io.StringIO):
             installer.main()
             install.assert_not_called()
+
+
+    def test_creates_required_desktop_menu_directories(self):
+        self.assertEqual(installer.DESKTOP_MENU_DIRS, (
+            Path("/usr/share/desktop-directories"),
+            Path("/usr/share/applications"),
+        ))
+        with tempfile.TemporaryDirectory() as tmp:
+            dirs = tuple(Path(tmp) / path.relative_to("/") for path in installer.DESKTOP_MENU_DIRS)
+            with patch.object(installer, "DESKTOP_MENU_DIRS", dirs):
+                installer.prepare_desktop_menu_dirs()
+            for directory in dirs:
+                self.assertTrue(directory.is_dir())
+                self.assertEqual(stat.S_IMODE(directory.stat().st_mode) & 0o022, 0)
+
+    def test_existing_menu_contents_and_permissions_are_preserved(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / "existing"
+            directory.mkdir(mode=0o750)
+            marker = directory / "existing.directory"
+            marker.write_text("keep this entry")
+            mode = stat.S_IMODE(directory.stat().st_mode)
+            with patch.object(installer, "DESKTOP_MENU_DIRS", (directory,)):
+                installer.prepare_desktop_menu_dirs()
+                installer.prepare_desktop_menu_dirs()
+            self.assertEqual(marker.read_text(), "keep this entry")
+            self.assertEqual(stat.S_IMODE(directory.stat().st_mode), mode)
+
+    def test_verified_download_and_menu_dirs_precede_apt_install(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dirs = (root / "desktop-directories", root / "applications")
+            launcher = root / "Audiveris"
+            alias = root / "audiveris"
+            events = []
+
+            def download(deb):
+                self.assertFalse(any(directory.exists() for directory in dirs))
+                events.append("verified-download")
+                deb.write_bytes(b"synthetic verified package")
+
+            def run(command, **kwargs):
+                self.assertTrue(kwargs["check"])
+                self.assertTrue(all(directory.is_dir() for directory in dirs))
+                if command[:2] == ["apt-get", "install"]:
+                    self.assertEqual(events, ["verified-download", "update"])
+                    self.assertEqual(kwargs["env"]["DEBIAN_FRONTEND"], "noninteractive")
+                    launcher.write_text("synthetic executable")
+                    launcher.chmod(0o755)
+                events.append(command[1])
+                return subprocess.CompletedProcess(command, 0)
+
+            with patch.object(installer, "validate_platform"), \
+                 patch.object(installer, "download_verified", side_effect=download), \
+                 patch.object(installer, "DESKTOP_MENU_DIRS", dirs), \
+                 patch.object(installer, "LAUNCHER", launcher), \
+                 patch.object(installer, "ALIAS", alias), \
+                 patch.object(installer.subprocess, "run", side_effect=run) as call:
+                installer.install()
+                call.assert_called_with([str(alias), "-batch", "-help"], check=True, timeout=60)
+            self.assertEqual(events, ["verified-download", "update", "install", "-batch"])
+            self.assertEqual(alias.resolve(), launcher.resolve())
+
+    def test_menu_directory_failure_aborts_before_apt(self):
+        with patch.object(installer, "validate_platform"), \
+             patch.object(installer, "download_verified"), \
+             patch.object(installer, "prepare_desktop_menu_dirs", side_effect=PermissionError("read-only")), \
+             patch.object(installer.subprocess, "run") as run:
+            with self.assertRaises(PermissionError):
+                installer.install()
+            run.assert_not_called()
+
+    def test_apt_install_failure_is_not_suppressed(self):
+        failure = subprocess.CalledProcessError(100, ["apt-get", "install"])
+        with patch.object(installer, "validate_platform"), \
+             patch.object(installer, "download_verified"), \
+             patch.object(installer, "prepare_desktop_menu_dirs"), \
+             patch.object(installer.subprocess, "run", side_effect=[None, failure]) as run:
+            with self.assertRaises(subprocess.CalledProcessError) as raised:
+                installer.install()
+            self.assertEqual(raised.exception.returncode, 100)
+            self.assertEqual(run.call_count, 2)
+
+    @unittest.skipUnless(shutil.which("xdg-desktop-menu"), "Requires xdg-utils")
+    def test_real_xdg_menu_reproduces_missing_directory_and_accepts_fix(self):
+        # Exercise the installed xdg utility in temporary XDG locations, without
+        # touching /usr/share, downloading Audiveris, or installing any packages.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            home, data = root / "home", root / "share"
+            home.mkdir()
+            data.mkdir()
+            applications = data / "applications"
+            applications.mkdir()
+            desktop = root / "bach-headless-test.desktop"
+            desktop.write_text(
+                "[Desktop Entry]\nType=Application\nName=Installer regression test\n"
+                "Exec=/bin/true\nCategories=Education;\n"
+            )
+            env = dict(os.environ, HOME=str(home), XDG_DATA_DIRS=str(data),
+                       XDG_DATA_HOME=str(home / "data"), XDG_CONFIG_DIRS=str(root / "config"),
+                       XDG_CONFIG_HOME=str(home / "config"), XDG_CACHE_HOME=str(home / "cache"),
+                       XDG_CURRENT_DESKTOP="X-Generic")
+            command = [shutil.which("xdg-desktop-menu"), "install", "--mode", "system",
+                       "--novendor", str(desktop)]
+            before = subprocess.run(command, env=env, capture_output=True, text=True, timeout=10)
+            self.assertEqual(before.returncode, 3, before.stderr)
+            self.assertIn("No writable system menu directory found", before.stderr)
+            with patch.object(installer, "DESKTOP_MENU_DIRS", (data / "desktop-directories", applications)):
+                installer.prepare_desktop_menu_dirs()
+            after = subprocess.run(command, env=env, capture_output=True, text=True, timeout=10)
+            self.assertEqual(after.returncode, 0, after.stderr)
+            self.assertEqual((applications / desktop.name).read_text(), desktop.read_text())
 
 
 if __name__ == "__main__":

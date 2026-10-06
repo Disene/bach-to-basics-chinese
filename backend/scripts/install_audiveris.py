@@ -22,6 +22,10 @@ SHA256 = "ae714594f40e54b1a4951fc3f914f08ae38fe5d07b7f2283b1a904fdb6e0a318"
 MAX_BYTES = 150 * 1024 * 1024
 LAUNCHER = Path("/opt/audiveris/bin/Audiveris")
 ALIAS = Path("/usr/local/bin/audiveris")
+DESKTOP_MENU_DIRS = (
+    Path("/usr/share/desktop-directories"),
+    Path("/usr/share/applications"),
+)
 
 
 def validate_platform() -> None:
@@ -63,12 +67,23 @@ def download_verified(destination: Path) -> None:
         raise
 
 
+def prepare_desktop_menu_dirs() -> None:
+    # The official .deb registers a desktop entry in its postinst script.
+    # xdg-desktop-menu requires BOTH writable XDG directories even when only a
+    # .desktop file is installed. Slim/headless images may not contain them.
+    # Create the standard directories, not a desktop environment; preserve
+    # existing contents/permissions and let real installation errors propagate.
+    for directory in DESKTOP_MENU_DIRS:
+        directory.mkdir(mode=0o755, parents=True, exist_ok=True)
+
+
 def install() -> None:
     validate_platform()
     env = dict(os.environ, DEBIAN_FRONTEND="noninteractive")
     with tempfile.TemporaryDirectory(prefix="audiveris-build-") as temp:
         deb = Path(temp) / PACKAGE
         download_verified(deb)
+        prepare_desktop_menu_dirs()
         # Install the complete package, including the vendor-supplied JRE and
         # native dependencies. Do not extract just the application JAR.
         subprocess.run(["apt-get", "update"], check=True, env=env)
