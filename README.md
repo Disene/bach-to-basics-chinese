@@ -162,14 +162,11 @@ Restart the backend after installing. Without Basic Pitch, MIDI / MusicXML / PDF
 
 ## Public deployments
 
-If you're hosting Bach to Basics on the public internet (not on `localhost` or behind a VPN), set these env vars on the backend before exposing it:
+If you're hosting Bach to Basics on the public internet (not on `localhost` or behind a VPN), put the whole app behind an access-controlled reverse proxy / SSO layer and run it over **HTTPS** (Web MIDI requires HTTPS anyway).
 
-1. **`BACKEND_API_KEY`** - a long random value; clients must send `X-API-Key: <value>` on every request
-2. **`REQUIRE_AUTH=1`** - makes the backend refuse to start if `BACKEND_API_KEY` is not set (turns a silent log warning into a fail-fast)
-3. **`ALLOWED_ORIGINS`** - your exact frontend hostname only (e.g. `https://piano.example.com`), not `*`
-4. Run behind **HTTPS** (Web MIDI requires it anyway)
+The backend also supports **`BACKEND_API_KEY`** + **`REQUIRE_AUTH=1`** for custom API clients or a reverse proxy that injects `X-API-Key`. The bundled browser UI does **not** prompt for or embed a backend API key, so setting a non-empty `BACKEND_API_KEY` by itself will make the built-in UI's `/api/*` requests return 403.
 
-Without these, the backend's expensive endpoints (audio transcription, PDF rendering, OMR, YouTube extraction) are open to the internet and can be abused.
+Also set **`ALLOWED_ORIGINS`** to the exact public frontend hostname(s), not `*`, and keep rate limiting enabled. Without an outer access-control layer, expensive endpoints (audio transcription, PDF rendering, OMR, YouTube extraction) are reachable by anyone who can access the app.
 
 ## Configuration
 
