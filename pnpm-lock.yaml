@@ -3643,7 +3643,7 @@ snapshots:
   '@coderline/alphatab-vite@1.8.3(vite@8.1.0(jiti@2.7.0)(terser@5.48.0)(yaml@2.8.4))':
     dependencies:
       magic-string: 0.30.21
-      vite: vite@8.1.0(jiti@2.7.0)(terser@5.48.0)(yaml@2.8.4)
+      vite: 8.1.0(jiti@2.7.0)(terser@5.48.0)(yaml@2.8.4)
 
   '@coderline/alphatab@1.8.3': {}
 
