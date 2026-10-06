@@ -8,36 +8,54 @@
 </p>
 
 <p align="center">
-  <a href="#简体中文-fork">简体中文</a> ·
-  <a href="#upstream-project-documentation">English</a>
+  <strong>简体中文</strong> · <a href="README.en.md">English</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/Disene/bach-to-basics-chinese/blob/main/LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-7c3aed"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-7c3aed"></a>
   <a href="https://github.com/Disene/bach-to-basics-chinese/issues"><img alt="Issues" src="https://img.shields.io/github/issues/Disene/bach-to-basics-chinese"></a>
   <a href="https://github.com/gigliof/bach-to-basics"><img alt="Upstream" src="https://img.shields.io/badge/upstream-gigliof%2Fbach--to--basics-64748b"></a>
-  <a href="https://ko-fi.com/gigliof"><img alt="Support upstream author on Ko-fi" src="https://img.shields.io/badge/support%20upstream-ko--fi-FF5E5B?logo=ko-fi&logoColor=white"></a>
 </p>
 
-## 简体中文 Fork
+# Bach to Basics 中文版
 
 这是 [gigliof/bach-to-basics](https://github.com/gigliof/bach-to-basics) 的简体中文 Fork，保留 MIT 许可和上游作者署名。
 
-当前 Fork 的目标不是另起一个平行产品，而是在尽量保持上游结构和可同步性的前提下，补齐中文界面、Docker 可复现部署，以及实际钢琴练习中发现的功能链路问题。
+本 Fork 以**简体中文界面**为默认体验，在尽量保持上游结构和可同步性的前提下，补齐中文本地化、Docker 可复现部署，以及实际钢琴练习中发现的 MIDI、等待模式、指法、五线谱和延音等功能链路问题。
 
-> 当前应用界面以**简体中文为默认语言**。如需英文界面与英文原始说明，请使用上游项目 [gigliof/bach-to-basics](https://github.com/gigliof/bach-to-basics)。本 Fork 暂不引入运行时多语言切换，以减少与上游同步时的冲突和维护成本。
+> 需要英文界面时，建议直接使用上游项目。当前 Fork 暂不引入运行时多语言切换，以减少维护成本和后续同步冲突。
 
-### 本 Fork 已完成的主要改进
+## 主要功能
 
-- **简体中文本地化**：主界面、设置、导入/导出、MIDI、错误提示、PWA 元信息和常见后端错误。
-- **硬件 MIDI**：实体 MIDI 键盘可以直接发声，并参与等待模式判定。
-- **等待模式**：按实际音符 onset 暂停，支持和弦、移调和左右手等待。
-- **自动指法**：修复单轨 MIDI 映射、后台 MusicXML 异步竞态和短曲预读缓存问题。
-- **五线谱**：修复 alphaTab + Vite 生产构建集成、多轨钢琴谱渲染以及部署后旧 chunk 恢复。
-- **延音踏板**：支持实体 MIDI CC64 实时状态、真实延音；支持读取 MIDI 文件自带 CC64 作为播放和瀑布流提示。
-- **Docker**：固定 Node 22 / pnpm 9，前端端口可通过 `FRONTEND_PORT` 配置。
+- **MIDI / MusicXML / PDF / 音频导入**
+- **瀑布流音符**
+- **88 键交互式钢琴**
+- **五线谱显示与跟随**
+- **A/B 循环**
+- **等待模式**
+- **速度训练**
+- **节拍器**
+- **移调**
+- **左右手独立音量**
+- **自动指法生成**
+- **实体 MIDI 键盘输入**
+- **CC64 延音踏板**
+- **5 种钢琴/键盘音色**
+- **深色 / 浅色模式**
+- **MIDI / MusicXML / PDF / MP3 导出**
 
-### 当前人工验证状态
+## 本 Fork 的主要改进
+
+- **简体中文本地化**：主界面、设置、导入/导出、MIDI、错误提示、PWA 元信息及常见后端错误。
+- **硬件 MIDI 修复**：实体 MIDI 键盘可以直接发声，并参与等待模式判定。
+- **等待模式修复**：按音符真实 onset 暂停，支持和弦、移调和左右手等待。
+- **自动指法修复**：修复单轨 MIDI 映射、后台 MusicXML 异步竞态、短曲预读缓存等问题。
+- **五线谱修复**：补齐 alphaTab + Vite 生产构建集成、多轨钢琴谱渲染，以及部署后旧 chunk 自动恢复。
+- **CC64 延音**：支持实体踏板实时状态与真实延音；支持 MIDI 文件自带 CC64 的声音与瀑布流提示。
+- **Docker / 开发环境**：固定 Node 22 / pnpm 9；支持通过 `FRONTEND_PORT` 自定义前端端口。
+- **设置体验**：优化音色选择布局、延音状态说明和用户可见错误提示。
+
+## 已验证状态
 
 | 功能 | 状态 |
 | --- | --- |
@@ -47,290 +65,133 @@
 | 自动指法生成 | ✅ 已实测 |
 | 五线谱渲染 | ✅ 已实测 |
 | 实体 CC64 踏板状态与实时延音 | ✅ 已实测 |
+| MIDI 文件自带 CC64 播放 / 标记 | ✅ 已实测 |
 | 音色切换与设置布局 | ✅ 已实测 |
-| MIDI 文件自带 CC64 播放/标记 | ✅ 已实测 |
-| GitHub Actions CI | ⚪ 当前未作为本 Fork 的验收依据 |
+| Docker 部署 | ✅ 已实测 |
 
-### Docker 快速启动
+## 快速开始
+
+### Docker（推荐）
+
+需要 Docker Desktop 或 Docker Engine + Compose。
 
 ```bash
+git clone https://github.com/Disene/bach-to-basics-chinese.git
+cd bach-to-basics-chinese
 cp .env.example .env
-# 如果 5173 被占用或被 Windows 保留，可在 .env 中设置：
-# FRONTEND_PORT=51722
-
 docker compose up -d --build
 ```
 
-默认访问 `http://localhost:5173`；如果设置了 `FRONTEND_PORT=51722`，则访问 `http://localhost:51722`。
+默认访问：
 
-> 建议始终固定使用 `localhost` 或 `127.0.0.1` 其中一个地址，不要交替使用；PWA / Service Worker 会把它们视为两个不同的 origin。
-
-### 可选能力与限制
-
-- PDF 导入依赖 **Audiveris**。
-- PDF 导出依赖 **LilyPond**。
-- 音频转 MIDI 依赖 **Basic Pitch**。
-- iOS Safari 不支持 Web MIDI，因此 iPhone/iPad 无法直接连接硬件 MIDI 键盘。
-- 公网部署请使用 HTTPS，并在应用外层增加访问控制 / SSO / 受控反向代理。内置浏览器 UI 不会自行发送 `X-API-Key`。
-
----
-
-## Upstream project documentation
-
-A browser-based piano practice tool. Drop in a **MIDI file**, a **MusicXML score**, or even a **PDF of sheet music**. Bach to Basics turns it into synced views of falling notes, an interactive 88-key piano, and rendered sheet music, then layers on practice tools (A/B loop, speed trainer, wait mode, metronome, transpose) to help you learn the piece.
-
-[![Bach to Basics demo](docs/demo.gif)](https://raw.githubusercontent.com/gigliof/bach-to-basics/main/docs/demo.gif)
-
-| Sheet music                                                                                                                          | All views                                                                                                                      | Settings                                                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Sheet music](docs/screenshot-sheet.png)](https://raw.githubusercontent.com/gigliof/bach-to-basics/main/docs/screenshot-sheet.png) | [![All views](docs/screenshot-all.png)](https://raw.githubusercontent.com/gigliof/bach-to-basics/main/docs/screenshot-all.png) | [![Settings](docs/screenshot-settings.png)](https://raw.githubusercontent.com/gigliof/bach-to-basics/main/docs/screenshot-settings.png) |
-
-## Features
-
-### Import
-
-- **MIDI** (`.mid`, `.midi`): parsed in a Web Worker, converted to MusicXML on the backend for sheet rendering
-- **MusicXML** (`.xml`, `.mxl`): both uncompressed and compressed (zip-style) variants
-- **PDF sheet music** (`.pdf`): optical music recognition via [Audiveris](https://github.com/Audiveris/audiveris) to MusicXML, then to MIDI (optional setup, see below)
-- **Audio recordings** (`.mp3`, `.wav`, `.m4a`, `.ogg`, `.flac`, `.aac`): audio-to-MIDI transcription via [Basic Pitch](https://github.com/spotify/basic-pitch) (optional setup, see below) - drop a recording of yourself improvising, get a playable piano roll
-
-Drag-and-drop anywhere on the window, or use the import button.
-
-> ⚠️ **A note on import accuracy.** PDF-to-MIDI (optical music recognition), MIDI-to-sheet-music (notation reconstruction), and audio-to-MIDI (pitch detection) are all inherently lossy conversions. Expect some inconsistencies:
->
-> - **PDF imports** can mis-read notes, dynamics, ornaments, articulation, and voicing, especially with low-resolution scans, handwritten scores, or complex layouts. Audiveris is the best open-source OMR engine available, but no engine matches a careful human transcription.
-> - **MIDI imports** produce sheet music by re-deriving notation from raw note timings. MIDI doesn't encode key signatures, beaming, voicing, articulation, or enharmonic spelling, so the rendered sheet is an interpretation, not a faithful reproduction of the composer's original score.
-> - **Audio imports** detect pitches in the mixed signal - this is pitch-detection, not source separation. Quality is excellent on solo instruments (piano, voice, guitar) and degrades on complex mixes (full-band recordings with drums + bass + vocals). For multi-track sources, expect a rough sketch rather than a clean transcription. Solo piano recordings give the best results.
->
-> For the cleanest sheet-music experience, import a **MusicXML** file (or `.mxl`) when you have one, which preserves full notation semantics end-to-end.
-
-### Visualization
-
-- **Falling notes**: Synthesia-style, GPU-accelerated via PixiJS. Hand-color separation, octave grid, measure numbers, optional beat lines, sustain-pedal indicators, ghost-notes-while-pedal-held, configurable impact effects (bloom / side burst / particle trail / off), and a "note outline" mode for high-contrast viewing.
-- **Sheet music**: full notation rendering via AlphaTab, with auto-scrolling cursor that tracks playback. White background toggle so notation stays readable in dark mode.
-- **88-key piano**: interactive keyboard with hover, press depth, ivory or white key themes. Tap keys to play; drag across them to glissando.
-
-### Practice tools
-
-- **A/B loop** with click-to-set markers; the loop region highlights across all three views
-- **Speed trainer**: auto-ramps tempo on each loop pass (configurable start %, end %, step %)
-- **Wait mode**: playback pauses until you play the correct note. Per-hand: wait for left only, right only, or both.
-- **Count-in**: 0, 1, or 2 bars of metronome before the music starts
-- **Metronome**: accent on downbeat
-- **Transposition**: shift the whole score ±12 semitones
-- **Per-hand volume**: solo or mute either hand independently
-- **Render-offset**: shift audio scheduling ±200 ms to compensate for audio interface latency
-- **Fingering hints**: 1-5 finger digits on the piano keys, optionally also on the falling-note bars. Auto-generates via the Parncutt algorithm ([pianoplayer](https://github.com/marcomusy/pianoplayer)) for files without fingerings, and preserves editorial fingerings already present in publisher MusicXML / `.mxl` files (Henle, Bärenreiter, etc.). "Regenerate" treats existing fingerings as anchors and only fills in gaps - ideal for editorial scores where only hard passages are annotated.
-
-### Audio & MIDI
-
-- **5 instrument options**: Splendid Grand Piano, Bright Acoustic, CP80 Electric, Harpsichord, Honky-Tonk (sampled, via [smplr](https://github.com/danigb/smplr))
-- **MIDI input** via Web MIDI: connect a hardware keyboard (Roland, Yamaha, etc.); input lights up the on-screen keys, drives wait mode, and supports live CC64 sustain-pedal state + audio sustain
-- **Tempo control**: 25%-200% with snap-back to 100%
-
-### Export
-
-Save the loaded piece in any of these formats via the Export button (next to Import):
-
-- **MIDI** (`.midi`) - the raw note data
-- **MusicXML** (`.musicxml`) - full notation, opens in any score editor
-- **PDF sheet music** (`.pdf`) - typeset via LilyPond (optional backend setup, see below)
-- **MP3 audio** (`.mp3`) - rendered with the Splendid Grand Piano via an OfflineAudioContext (other instruments to follow; the grand covers the common case)
-
-### Look & feel
-
-- **Color themes**: Cascade, Violet, Classic, Ocean, Forest, or fully custom (left/right/unknown hand colors)
-- **Dark / light mode**: system-aware initial theme, manual override
-- **Note labels**: none, C-only, white keys, black keys, or all
-
-## Tech stack
-
-| Layer            | Technology                                                       |
-| ---------------- | ---------------------------------------------------------------- |
-| Frontend         | React 19, TypeScript, Vite, Tailwind CSS                         |
-| Rendering        | PixiJS 8 (falling notes + piano), AlphaTab (sheet music)         |
-| Audio            | Tone.js (scheduling), smplr (sampled instruments), Web Audio API |
-| MIDI input       | WebMidi.js                                                       |
-| State            | Zustand                                                          |
-| Backend          | FastAPI (Python 3.11/3.12)                                       |
-| Music processing | music21, defusedxml                                              |
-| OMR (optional)   | Audiveris (Java)                                                 |
-
-## Running the app
-
-### Option A: Docker (recommended for end users)
-
-The simplest way. Requires only Docker Desktop (or Docker Engine + Compose).
-
-```bash
-docker compose up        # build the images on first run, then start
-open http://localhost:5173
+```text
+http://localhost:5173
 ```
 
-That's it. Stop with `Ctrl+C` (or `docker compose down`). If port 5173 is unavailable, set `FRONTEND_PORT` in `.env` (for example `FRONTEND_PORT=51722`) and open that port instead.
+如果 5173 被占用或被 Windows 保留，在 `.env` 中设置：
 
-> Optional: copy `.env.example` to `.env` and set `BACKEND_API_KEY` if you want to require an API key on the backend.
+```env
+FRONTEND_PORT=51722
+```
 
-### Option B: Native (recommended for development)
+然后访问：
 
-You'll need:
+```text
+http://localhost:51722
+```
 
-- **Node.js** 22+ and **pnpm 9** (`npm i -g pnpm@9`)
-- **Python** 3.11 or 3.12
-- **Java 17+**, only needed for PDF import via Audiveris
+> 建议固定使用 `localhost` 或 `127.0.0.1` 其中一个，不要交替使用。PWA / Service Worker 会把它们视为两个不同的 origin。
+
+### 原生开发
+
+需要：
+
+- Node.js 22+
+- pnpm 9
+- Python 3.11 / 3.12
+- Java 17+（仅 PDF 导入需要）
 
 ```bash
+npm i -g pnpm@9
 pnpm install
-pnpm backend:setup      # creates backend/.venv with the core deps
-pnpm dev                # frontend on :5173, backend on :8000, with hot reload
+pnpm backend:setup
+pnpm dev
 ```
 
-### Optional: PDF import via Audiveris
+前端默认运行在 `http://localhost:5173`，后端运行在 `http://localhost:8000`。
 
-PDF to MusicXML uses [Audiveris](https://github.com/Audiveris/audiveris), an open-source OMR engine.
+## MIDI 与延音踏板
 
-1. Download `audiveris.jar` from [Audiveris releases](https://github.com/Audiveris/audiveris/releases)
-2. Place it at `backend/bin/audiveris.jar`
-3. Make sure Java 17+ is on `PATH` (Docker users: already included in the image)
+连接 MIDI 键盘后：
 
-Without the JAR, MIDI / MusicXML import still works, only PDF import is unavailable.
+1. 点击右上角 MIDI 设备选择器并选择设备。
+2. 实体键盘输入会驱动声音、屏幕琴键和等待模式。
+3. 支持 **CC64 延音踏板**。
+4. 顶部会显示实时“踏板 抬起 / 踩下”状态。
+5. 如果导入的 MIDI 文件包含 CC64，设置中会显示检测到的踏板段数，并可显示乐曲踏板标记和延音残影。
 
-### Optional: PDF export via LilyPond
+> Web MIDI 在生产环境需要 HTTPS。iOS Safari 当前不支持 Web MIDI。
 
-PDF export uses [LilyPond](https://lilypond.org/) for typesetting. It's not bundled by default (heavy install, ~200 MB).
+## 指法
 
-- **macOS**: `brew install lilypond`
-- **Linux**: `sudo apt install lilypond`
-- **Docker**: add `lilypond` to `backend/Dockerfile`'s `apt-get install` line, then `docker compose build backend`
+支持：
 
-Restart the backend after installing. Without LilyPond, MIDI and MusicXML export still work; only PDF export is unavailable.
+- 在钢琴键盘显示 1–5 指法；
+- 在瀑布流音符上显示指法；
+- 使用 [pianoplayer](https://github.com/marcomusy/pianoplayer) 自动生成指法；
+- 保留 MusicXML 中已有的编辑版指法，并将其作为重新生成时的锚点。
 
-### Optional: Audio-to-MIDI via Basic Pitch
+## 可选后端能力
 
-Audio-to-MIDI transcription uses [Basic Pitch](https://github.com/spotify/basic-pitch), Spotify's open-source pitch-detection model. It's not bundled by default because it pulls in TensorFlow (~500 MB) and has tight Python-version constraints.
+### PDF 导入：Audiveris
 
-- **macOS**: requires Python **3.11** specifically. `brew install python@3.11`, then create a 3.11 venv at `backend/.venv` and `pip install -r backend/requirements-transcribe.txt`. (Python 3.12+ doesn't work on macOS because `basic-pitch` requires `tensorflow-macos<2.15.1`, and no compatible wheel exists for 3.12.)
-- **Linux**: Python 3.11 or 3.12. Activate the venv and `pip install -r backend/requirements-transcribe.txt`.
-- **Docker**: edit `backend/Dockerfile` to also `pip install -r requirements-transcribe.txt` (or use a separate build target), then `docker compose build backend`. The image already uses Python 3.12.
+PDF → MusicXML 需要 [Audiveris](https://github.com/Audiveris/audiveris)。
 
-Restart the backend after installing. Without Basic Pitch, MIDI / MusicXML / PDF import still works; only audio import (MP3, WAV, etc.) is unavailable.
+将 `audiveris.jar` 放到：
 
-## Using the app on iPad / iPhone (same network)
-
-1. In `frontend/vite.config.ts`, add `host: true` to the `server` block (or run `pnpm --filter frontend dev --host`)
-2. Find your computer's LAN IP (System Settings > Network on macOS)
-3. On the iPad, open `http://<your-ip>:5173`
-
-⚠️ **Web MIDI is not available on iOS**, the on-screen keyboard works, but you cannot connect a hardware piano via USB or Bluetooth from iOS Safari. This is a WebKit limitation Apple has not addressed.
-
-## Public deployments
-
-If you're hosting Bach to Basics on the public internet (not on `localhost` or behind a VPN), put the whole app behind an access-controlled reverse proxy / SSO layer and run it over **HTTPS** (Web MIDI requires HTTPS anyway).
-
-The backend also supports **`BACKEND_API_KEY`** + **`REQUIRE_AUTH=1`** for custom API clients or a reverse proxy that injects `X-API-Key`. The bundled browser UI does **not** prompt for or embed a backend API key, so setting a non-empty `BACKEND_API_KEY` by itself will make the built-in UI's `/api/*` requests return 403.
-
-Also set **`ALLOWED_ORIGINS`** to the exact public frontend hostname(s), not `*`, and keep rate limiting enabled. Without an outer access-control layer, expensive endpoints (audio transcription, PDF rendering, OMR, YouTube extraction) are reachable by anyone who can access the app.
-
-## Configuration
-
-All backend settings come from environment variables. Copy `.env.example` to `.env` and edit.
-
-| Variable                   | Default                 | Description                                                                                                                                   |
-| -------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ALLOWED_ORIGINS`          | `http://localhost:5173` | Comma-separated list of allowed CORS origins                                                                                                  |
-| `BACKEND_API_KEY`          | _(unset = open)_        | When set, all requests must include `X-API-Key: <value>`                                                                                      |
-| `REQUIRE_AUTH`             | _(unset)_               | Set to `1` to make the server refuse to start if `BACKEND_API_KEY` is not configured - useful for preventing accidental open deployments      |
-| `RATE_LIMIT_PER_MIN`       | `60`                    | Max requests per IP per minute. `0` disables it                                                                                               |
-| `HEAVY_RATE_LIMIT_PER_MIN` | `10`                    | Stricter limit applied to expensive endpoints (`/omr/`, `/youtube/`)                                                                          |
-| `TRUSTED_PROXY_IPS`        | _(unset)_               | Comma-separated IPs of trusted reverse proxies. When set, the real client IP is read from `X-Forwarded-For` instead of the connection address |
-| `MUSIC21_TIMEOUT_S`        | `60`                    | Hard timeout (seconds) for music21 conversions (MIDI-to-MusicXML, MusicXML-to-MIDI). Raise for very dense scores                              |
-| `AUDIVERIS_TIMEOUT_S`      | `120`                   | Hard timeout (seconds) for Audiveris OMR. Raise for large or multi-page PDFs                                                                  |
-
-> **Web MIDI requires HTTPS** in production. Plain `http://` only works on `localhost`.
-
-## Project layout
-
-```
-bach-to-basics/
-├── frontend/                     # React app (Vite)
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── FallingNotes/     # PixiJS falling-note renderer
-│   │   │   ├── PianoKeyboard/    # PixiJS 88-key keyboard
-│   │   │   ├── SheetMusic/       # AlphaTab sheet music view
-│   │   │   └── Transport/        # Transport bar + settings panel
-│   │   ├── engine/               # SyncEngine, AudioEngine, MidiClock
-│   │   ├── store/                # Zustand app state
-│   │   ├── utils/                # Shared utilities
-│   │   ├── views/                # PracticeView (main layout)
-│   │   └── workers/              # MIDI parsing in a Web Worker
-│   └── public/                   # Static assets (soundfont)
-├── backend/                      # FastAPI backend
-│   ├── routers/                  # transcribe, omr, youtube, export, fingering
-│   └── services/                 # blocking work (music21, Audiveris, etc.)
-├── shared/                       # TypeScript types shared with the frontend
-├── docker-compose.yml            # 1-command run for end users
-└── package.json                  # pnpm workspace root
+```text
+backend/bin/audiveris.jar
 ```
 
-## Browser support
+### PDF 导出：LilyPond
 
-Requires a Chromium-based browser (Chrome, Edge, Brave, Arc) for **Web MIDI API** support. Firefox and Safari don't implement Web MIDI; on those, the on-screen keyboard still works but hardware MIDI input does not.
+PDF 导出需要 [LilyPond](https://lilypond.org/)。
 
-## Roadmap
+未安装时，MIDI 与 MusicXML 导出仍可正常使用。
 
-The backend already exposes endpoints for several features that don't yet have UI hooks:
+### 音频转 MIDI：Basic Pitch
 
-- **YouTube-to-MIDI** via yt-dlp + Basic Pitch (`/youtube/extract`), sync data model already in place
+音频转 MIDI 使用 [Basic Pitch](https://github.com/spotify/basic-pitch)。
 
-These will become user-facing in upcoming releases. PRs welcome.
+按项目文档安装额外依赖后即可使用。
 
-## Troubleshooting
+## 公网部署
 
-<details>
-<summary><strong>Sheet music doesn't render after loading a MIDI file</strong></summary>
+如果要公开部署：
 
-The MIDI-to-MusicXML conversion runs on the backend. Check that the backend is up (`curl http://localhost:8000/health` should return OK) and look at the backend terminal for `music21` errors. Very dense scores can hit the `MUSIC21_TIMEOUT_S` (default 60s); raise it if needed.
+- 使用 HTTPS；
+- 设置准确的 `ALLOWED_ORIGINS`；
+- 保持限流开启；
+- 建议在应用外层增加访问控制 / SSO / 受控反向代理。
 
-</details>
+后端支持 `BACKEND_API_KEY` 与 `REQUIRE_AUTH=1`，但内置浏览器 UI 不会自行注入 `X-API-Key`，因此不要只设置后端 Key 而不配置对应代理层。
 
-<details>
-<summary><strong>No sound from the on-screen piano</strong></summary>
+## 与上游同步
 
-The first interaction (any click) wakes the audio context. If you still hear nothing, open DevTools > Console and look for errors related to `AudioContext` or sample fetches from `smpldsnds.github.io` / `gleitz.github.io`. Some corporate networks block these CDNs.
+上游项目：
 
-</details>
+https://github.com/gigliof/bach-to-basics
 
-<details>
-<summary><strong>"WebMIDI not supported" on Firefox or Safari</strong></summary>
+本 Fork 会尽量保持改动可拆分，以便同步上游更新，也方便将通用修复回馈到原项目。
 
-Use Chrome, Edge, Brave, or Arc. Firefox and Safari haven't implemented Web MIDI.
+## 贡献
 
-</details>
+欢迎提交 Issue / PR。对于适合所有用户的通用 Bug 修复和功能，也优先考虑贡献到上游。
 
-<details>
-<summary><strong>PDF import says "OMR engine not available"</strong></summary>
-
-Either Audiveris isn't installed, or `audiveris.jar` isn't at `backend/bin/audiveris.jar`, or Java 17+ isn't on the PATH. See the PDF import section above. MIDI and MusicXML import are unaffected.
-
-</details>
-
-<details>
-<summary><strong>Docker build fails on the frontend</strong></summary>
-
-The frontend Dockerfile uses the repo root as build context to read `pnpm-workspace.yaml` and `shared/`. If you've moved or renamed those, update `docker-compose.yml`'s `build.context` accordingly.
-
-</details>
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md). Bug reports and PRs welcome.
+开发前建议阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## License
 
-[MIT](LICENSE) for this codebase.
+MIT License。详见 [LICENSE](LICENSE)。
 
-Third-party components (AlphaTab, music21, etc.) keep their own licenses, see [NOTICE](NOTICE) for the rundown. Notably:
-
-- **AlphaTab** is MPL-2.0 (per-file copyleft), fine for both open source and commercial use as long as you don't modify AlphaTab's own files.
-- **Audiveris** is AGPL-3.0 and is _not_ bundled, users download it separately, so this repo doesn't inherit AGPL obligations.
+原项目作者与上游版权信息保持不变。
