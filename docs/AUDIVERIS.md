@@ -62,6 +62,7 @@ Official reference: https://audiveris.github.io/audiveris/_pages/guides/main/lan
 - 只在构建阶段从官方地址下载，校验 SHA-256 后安装。失败会使构建失败，不会假装 PDF 功能可用。运行时不联网安装软件。
 - 目前只为 `linux/amd64` 配置了此安装包；`arm64` 明确拒绝，不自动启用仿真。默认关闭时其他架构仍沿用原有部署方式。
 - 使用完整安装包的 `/opt/audiveris/bin/Audiveris`，并创建小写 PATH 入口供现有后端检测。`/app/bin` 的空宿主目录不会遮住它。已有 legacy JAR 仍按原检测顺序优先。
+- Docker 中的小写 PATH 入口是一个 headless wrapper：默认设置 `GDK_SCALE=1` 后再执行官方 launcher。Audiveris 5.11 在 Linux 启动时会先探测 GTK HiDPI；无图形界面的 slim 镜像缺少 GTK 时会在解析 `-batch` 前崩溃。wrapper 仅跳过这一步显示缩放探测，不关闭 OMR，也不会吞掉 Audiveris 的实际运行错误。
 - Windows 宿主机安装 Audiveris 不等于 Docker 后端已安装。
 - Audiveris 面向常规五线谱识别。纯简谱 PDF 不因此变成可可靠自动识别的乐谱。混合谱、倾斜照片、阴影和教材附加标记需人工核对。
 - 保留完整安装包中的 Audiveris/第三方许可；Audiveris 的 AGPL-3.0 不因放在 MIT 项目旁边而改变。
