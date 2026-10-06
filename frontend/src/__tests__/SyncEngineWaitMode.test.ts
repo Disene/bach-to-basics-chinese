@@ -88,7 +88,7 @@ function doc(notes: NoteEvent[]): MusicDocument {
   };
 }
 
-type TestEngine = SyncEngine & {
+type TestEngineInternals = {
   _state: { status: "stopped" | "playing" | "paused" | "waiting" };
   onTick(seconds: number): void;
 };
@@ -111,7 +111,7 @@ describe("SyncEngine wait mode", () => {
     await engine.loadDocument(doc([note("n1", 60, 1)]));
     engine.setWaitMode(true);
 
-    const testEngine = engine as unknown as TestEngine;
+    const testEngine = engine as unknown as TestEngineInternals;
     testEngine._state.status = "playing";
     testEngine.onTick(0);
 
@@ -139,7 +139,7 @@ describe("SyncEngine wait mode", () => {
     ]));
     engine.setWaitMode(true);
 
-    const testEngine = engine as unknown as TestEngine;
+    const testEngine = engine as unknown as TestEngineInternals;
     testEngine._state.status = "playing";
     testEngine.onTick(0);
 
@@ -161,7 +161,7 @@ describe("SyncEngine wait mode", () => {
     engine.setTranspose(2);
     engine.setWaitMode(true);
 
-    const testEngine = engine as unknown as TestEngine;
+    const testEngine = engine as unknown as TestEngineInternals;
     testEngine._state.status = "playing";
     testEngine.onTick(0);
 
