@@ -15,4 +15,4 @@ yt-dlp>=2024.4.9
 pdf2image>=1.17
 
 # Fingering generation
-pianoplayer>=0.9
+pianoplayer>=3.0.2,<4
