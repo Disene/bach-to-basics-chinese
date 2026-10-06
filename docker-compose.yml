@@ -23,8 +23,12 @@ services:
     environment:
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:5173}
       - BACKEND_API_KEY=${BACKEND_API_KEY:-}
+      - REQUIRE_AUTH=${REQUIRE_AUTH:-}
       - RATE_LIMIT_PER_MIN=${RATE_LIMIT_PER_MIN:-60}
+      - HEAVY_RATE_LIMIT_PER_MIN=${HEAVY_RATE_LIMIT_PER_MIN:-10}
+      - TRUSTED_PROXY_IPS=${TRUSTED_PROXY_IPS:-}
       - MUSIC21_TIMEOUT_S=${MUSIC21_TIMEOUT_S:-60}
+      - AUDIVERIS_TIMEOUT_S=${AUDIVERIS_TIMEOUT_S:-120}
       - FINGERING_TIMEOUT_S=${FINGERING_TIMEOUT_S:-120}
     volumes:
       # Mount audiveris.jar from host (optional - PDF import is disabled if absent)
