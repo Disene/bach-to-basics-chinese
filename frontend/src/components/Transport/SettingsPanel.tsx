@@ -1452,7 +1452,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                           handVolume: { ...settings.handVolume, [hand]: Number(e.target.value) },
                         })
                       }
-                      aria-label={`${hand === "left" ? "左手" : "右手"} hand volume`}
+                      aria-label={`${hand === "left" ? "左手" : "右手"}音量`}
                       aria-valuetext={`${Math.round(settings.handVolume[hand] * 100)}%`}
                       className="flex-1"
                       style={rangeStyle(settings.handVolume[hand], 0, 1)}

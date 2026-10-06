@@ -172,11 +172,10 @@ async def transcribe_mp3(file: UploadFile, background_tasks: BackgroundTasks):
             raise HTTPException(
                 status_code=503,
                 detail=(
-                    "Audio-to-MIDI transcription needs Basic Pitch on the backend "
-                    "(not bundled by default).\n\n"
-                    "Quick install: with a Python 3.11 venv active on macOS (or 3.11/3.12 "
-                    "on Linux), run pip install -r backend/requirements-transcribe.txt. "
-                    "For Docker, see the README section 'Optional: Audio-to-MIDI via Basic Pitch'."
+                    "音频转 MIDI 需要后端安装 Basic Pitch（默认未包含）。\n\n"
+                    "快速安装：macOS 使用 Python 3.11 虚拟环境（Linux 可用 3.11/3.12），"
+                    "运行 pip install -r backend/requirements-transcribe.txt。"
+                    "Docker 请参阅 README 的“Optional: Audio-to-MIDI via Basic Pitch”章节。"
                 ),
             )
         raise HTTPException(

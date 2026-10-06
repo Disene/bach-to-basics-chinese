@@ -76,10 +76,10 @@ async def export_pdf(req: ExportPdfRequest, background_tasks: BackgroundTasks):
             raise HTTPException(
                 status_code=503,
                 detail=(
-                    "PDF export needs LilyPond on the backend (not bundled by default).\n\n"
-                    "Quick install: brew install lilypond (macOS) or apt install lilypond "
-                    "(Linux). For Docker, see the README section 'Optional: PDF export via "
-                    "LilyPond'. MIDI and MusicXML export work without it."
+                    "PDF 导出需要后端安装 LilyPond（默认未包含）。\n\n"
+                    "快速安装：macOS 运行 brew install lilypond，Linux 运行 apt install lilypond。"
+                    "Docker 请参阅 README 的“Optional: PDF export via LilyPond”章节。"
+                    "未安装 LilyPond 时，MIDI 和 MusicXML 导出仍可使用。"
                 ),
             )
         raise HTTPException(status_code=500, detail=f"PDF 导出失败：{msg or '未知错误'}")
