@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { NoteEvent } from "@bach-to-basics/shared";
-import { applyFingeringMarks, type FingeringMark } from "../store/useAppStore";
+import { applyFingeringMarks, type FingeringMark } from "../utils/fingeringMapping";
 
 function note(
   id: string,
