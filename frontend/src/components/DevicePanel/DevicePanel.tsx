@@ -59,8 +59,10 @@ export function DevicePanel() {
     }
     const input = WebMidi.getInputByName(name);
     if (!input) return;
-    input.addListener("noteon", (e) => syncEngine.onMidiInput(e.note.number, e.rawValue ?? 64));
-    input.addListener("noteoff", (e) => syncEngine.onMidiInputOff(e.note.number));
+    input.addListener("noteon", (e) => {
+      void syncEngine.playMidi(e.note.number, e.rawValue ?? 64);
+    });
+    input.addListener("noteoff", (e) => syncEngine.stopMidi(e.note.number));
     setMidiDevice(name);
     setOpen(false);
   };
