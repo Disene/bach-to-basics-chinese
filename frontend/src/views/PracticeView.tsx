@@ -576,7 +576,8 @@ function StatusBar() {
       .toString()
       .padStart(2, "0")}`;
   const keySig = doc?.keySignature ? keySignatureToLabel(doc.keySignature) : null;
-  const isActive = status === "playing" || status === "paused";
+  const statusLabel =
+    status === "playing" ? "播放中" : status === "paused" ? "已暂停" : status === "waiting" ? "等待演奏" : null;
 
   return (
     <div
@@ -594,9 +595,9 @@ function StatusBar() {
     >
       {doc ? (
         <>
-          {isActive && (
+          {statusLabel && (
             <span style={{ color: "var(--color-accent)", fontWeight: 600, flexShrink: 0 }}>
-              播放中
+              {statusLabel}
             </span>
           )}
           <span className="truncate" style={{ minWidth: 0 }}>
