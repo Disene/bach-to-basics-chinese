@@ -114,7 +114,7 @@ export function SheetMusicView() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         api.scoreLoaded.on((score: any) => {
           scoreLoaded.current = true;
-          const tracks = Array.from(score?.tracks ?? []);
+          const tracks = Array.from(score?.tracks ?? []) as any[];
           if (
             tracks.length > 1 &&
             score &&
