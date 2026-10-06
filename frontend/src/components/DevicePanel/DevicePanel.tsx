@@ -61,6 +61,7 @@ export function DevicePanel() {
   const connectDevice = (name: string) => {
     if (midiDeviceName) {
       try { WebMidi.getInputByName(midiDeviceName)?.removeListener(); } catch {}
+      syncEngine.setSustainPedal(false);
     }
     const input = WebMidi.getInputByName(name);
     if (!input) return;
