@@ -1093,6 +1093,6 @@ async function fetchMusicXml(buffer: ArrayBuffer, doc: MusicDocument, id: string
   // asynchronous, so the original `doc` argument may already be stale.
   const { document: currentDoc } = useAppStore.getState();
   if (currentDoc?.id === id) {
-    useAppStore.setState({ document: { ...currentDoc, musicXml } });
+    useAppStore.setState({ document: { ...currentDoc, musicXml: musicxml } });
   }
 }
