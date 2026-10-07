@@ -1,6 +1,12 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App";
+import { useAppStore } from "./store/useAppStore";
+import { connectSettingsPersistence } from "./store/settingsPersistence";
+
+// Restore global preferences through existing store/engine actions before UI mount.
+const stopSettingsPersistence = connectSettingsPersistence(useAppStore);
+if (import.meta.hot) import.meta.hot.dispose(stopSettingsPersistence);
 
 // A page that was already open during a new deployment can still reference an
 // old hashed lazy chunk that the new container no longer has. Vite emits this
