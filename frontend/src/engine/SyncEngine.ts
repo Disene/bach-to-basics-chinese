@@ -1,6 +1,7 @@
 import * as Tone from "tone";
 import bus from "./EventBus";
 import { MidiClock } from "./MidiClock";
+import { EarlyWaitBuffer } from "./EarlyWaitBuffer";
 import { AudioEngine } from "./AudioEngine";
 import type { InstrumentId } from "./AudioEngine";
 import type { MusicDocument, NoteEvent, PlaybackStatus } from "@bach-to-basics/shared";
@@ -79,6 +80,8 @@ export class SyncEngine {
   // Exact MIDI pitches the player must hit before wait-mode playback resumes.
   // Stored explicitly because noteIndex advances several seconds ahead for rendering/audio scheduling.
   private waitingMidis = new Set<number>();
+  private earlyWait = new EarlyWaitBuffer(0.15);
+  private pendingWaitGroups = new Map<number, NoteEvent[]>();
   private waitingGroup: NoteEvent[] = [];
   private waitingHits = new Set<number>();
   private scoreVoices = new Map<string, NoteEvent>();
@@ -220,6 +223,7 @@ export class SyncEngine {
   }
 
   pause() {
+    this.rebuildEarlyWaitTargets(); // paused time must not count as an early hit
     this._cancelCountIn();
     this.clock.pause();
     this.stopAnimLoop();
@@ -227,6 +231,8 @@ export class SyncEngine {
   }
 
   stop() {
+    this.earlyWait.clear();
+    this.pendingWaitGroups.clear();
     this._cancelCountIn();
     this.clock.stop();
     this.audio.stopAll();
@@ -360,6 +366,7 @@ export class SyncEngine {
 
   setActiveHands(hands: Set<"left" | "right">) {
     this._state.activeHands = new Set(hands);
+    this.rebuildEarlyWaitTargets();
     // Muting a hand must also release its already-sounding score notes,
     // including source-CC64 tails, without stopping the user's live keys.
     this.releaseMutedScoreVoices();
@@ -380,6 +387,7 @@ export class SyncEngine {
 
   setWaitForHand(hand: "left" | "right" | "both") {
     this._state.waitForHand = hand;
+    this.rebuildEarlyWaitTargets();
     this.refreshWaitingTargets();
     this.emitState(this._state.status);
   }
@@ -396,6 +404,7 @@ export class SyncEngine {
 
   setTranspose(semitones: number) {
     this.transposeSemitones = Math.round(Math.max(-12, Math.min(12, semitones)));
+    this.rebuildEarlyWaitTargets();
   }
 
   setCountInBars(n: 0 | 1 | 2) {
@@ -414,6 +423,7 @@ export class SyncEngine {
 
   /** Called by WebMidi.js, virtual keyboard click, etc. */
   onMidiInput(midi: number, velocity: number) {
+    if (!Number.isInteger(midi) || midi < 0 || midi > 127 || !Number.isFinite(velocity) || velocity <= 0) return;
     bus.emit("input:note:on", { midi, velocity });
 
     if (this._state.status === "waiting" && this.waitingMidis.has(midi)) {
@@ -424,6 +434,9 @@ export class SyncEngine {
         this.clock.resume();
         this.emitState("playing");
       }
+    } else if (this._state.waitMode && this._state.status === "playing" &&
+               this.countInTimeouts.length === 0 && this.clock.state === "started") {
+      this.earlyWait.credit(midi, velocity, this.clock.currentSeconds, this._state.tempoMultiplier);
     }
   }
 
@@ -494,6 +507,8 @@ export class SyncEngine {
    */
   private seekTo(seconds: number) {
     if (!this.doc) return;
+    this.earlyWait.clear();
+    this.pendingWaitGroups.clear();
     this._state.currentSeconds = seconds;
     this.noteIndex = this.doc.notes.findIndex((n) => n.startSeconds >= seconds);
     if (this.noteIndex === -1) this.noteIndex = this.doc.notes.length;
@@ -536,6 +551,16 @@ export class SyncEngine {
     }
   }
 
+  private rebuildEarlyWaitTargets() {
+    this.earlyWait.clear();
+    if (!this._state.waitMode) return;
+    for (const [onset, notes] of this.pendingWaitGroups) {
+      for (const note of notes) {
+        if (this.shouldWaitFor(note)) this.earlyWait.register(onset, note.midi);
+      }
+    }
+  }
+
   private clearWaitingGroup() {
     this.waitingMidis.clear();
     this.waitingGroup = [];
@@ -570,6 +595,9 @@ export class SyncEngine {
     if (this._state.status !== "playing") return;
     this.clearWaitingGroup();
     this.waitingGroup = notes;
+    const required = new Set(notes.filter(note => this._state.waitMode && this.shouldWaitFor(note)).map(note => note.midi));
+    const remaining = this.earlyWait.consume(notes[0].startSeconds, required);
+    this.waitingHits = new Set([...required].filter(midi => !remaining.has(midi)));
     // Read ALL hand decisions at onset, not five seconds earlier. Group both
     // hands together so accompaniment sounds before the shared clock pauses.
     for (const note of notes) {
@@ -577,7 +605,7 @@ export class SyncEngine {
       this.scoreHighlights.set(note.id, note);
       bus.emit("note:on", note);
       if (this._state.waitMode && this.shouldWaitFor(note)) {
-        this.waitingMidis.add(note.midi);
+        if (!this.waitingHits.has(note.midi)) this.waitingMidis.add(note.midi);
       } else {
         const volume = this.scoreVolume(note);
         // A 0% hand is silent, not a velocity-1 note. This is independent of
@@ -697,7 +725,10 @@ export class SyncEngine {
 
       // Convert doc-time offset to real-time for Tone.js scheduling.
       // renderOffsetMs > 0 means audio plays earlier (compensates for delayed output).
-      const offsetSec = this.renderOffsetMs / 1000;
+      // In wait mode the shared target/accompaniment onset follows the
+      // musical timeline, not output-latency compensation. Otherwise a positive
+      // offset would pause the target before the early-input window completes.
+      const offsetSec = this._state.waitMode ? 0 : this.renderOffsetMs / 1000;
       const onDelay = Math.max(0, (note.startSeconds - docSeconds) / tempoMultiplier - offsetSec);
       const offDelay = Math.max(0, (note.endSeconds - docSeconds) / tempoMultiplier - offsetSec);
 
@@ -705,12 +736,15 @@ export class SyncEngine {
       if (!group) {
         group = [];
         onsetGroups.set(note.startSeconds, group);
+        this.pendingWaitGroups.set(note.startSeconds, group);
         const onsetNotes = group;
         Tone.getTransport().scheduleOnce(() => {
+          this.pendingWaitGroups.delete(note.startSeconds);
           this.fireNoteGroup(onsetNotes);
         }, `+${onDelay}`);
       }
       group.push(tNote);
+      if (this._state.waitMode && this.shouldWaitFor(tNote)) this.earlyWait.register(note.startSeconds, tNote.midi);
 
       // Visual duration stays independent of the source sustain pedal.
       Tone.getTransport().scheduleOnce(() => {

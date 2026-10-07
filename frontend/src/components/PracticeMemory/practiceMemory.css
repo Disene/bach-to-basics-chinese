@@ -1,0 +1,15 @@
+/* Keep the existing player within the viewport when the memory status is visible. */
+.practice-app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+.practice-app-content {
+  flex: 1;
+  min-height: 0;
+}
+.practice-app-content > .h-screen {
+  height: 100%;
+}
