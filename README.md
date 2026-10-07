@@ -109,7 +109,7 @@ http://localhost:51722
 - Node.js 22+
 - pnpm 9
 - Python 3.11 / 3.12
-- Java 17+（仅 PDF 导入需要）
+- Audiveris 官方安装包（仅五线谱 PDF 识别需要，现代安装包自带 Java 运行环境）
 
 ```bash
 npm i -g pnpm@9
@@ -147,11 +147,11 @@ pnpm dev
 
 PDF → MusicXML 需要 [Audiveris](https://github.com/Audiveris/audiveris)。
 
-将 `audiveris.jar` 放到：
+新增可选的 Docker 构建时预装路径：在 `.env` 设置 `INSTALL_AUDIVERIS=1` 后重建后端，构建过程下载固定版本的官方完整安装包并校验 SHA-256。默认值为 `0`，不影响现有轻量部署。
 
-```text
-backend/bin/audiveris.jar
-```
+**该自动安装路径尚待真实 Docker 构建和识谱验收，不包含在上方既有功能实测结果中。** 完整步骤、支持架构和验证边界见 [Audiveris 安装说明](docs/AUDIVERIS.md)。
+
+旧的 `backend/bin/audiveris.jar` 挂载只作为兼容入口保留。不要从现代安装包中只拷贝主 JAR；Windows 宿主机已安装也不代表 Docker 内已安装。Audiveris 面向常规五线谱，纯简谱 PDF 不在本方案承诺的自动识别范围内。
 
 ### PDF 导出：LilyPond
 

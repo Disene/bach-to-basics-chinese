@@ -109,7 +109,7 @@ Requirements:
 - Node.js 22+
 - pnpm 9
 - Python 3.11 / 3.12
-- Java 17+ only for PDF import
+- Official Audiveris installer only for staff-notation PDF recognition; modern installers include their Java runtime
 
 ```bash
 npm i -g pnpm@9
@@ -147,11 +147,11 @@ The fork supports:
 
 PDF → MusicXML requires [Audiveris](https://github.com/Audiveris/audiveris).
 
-Place `audiveris.jar` at:
+An optional Docker build-time installation path is available: set `INSTALL_AUDIVERIS=1` in `.env` and rebuild the backend. The build downloads a pinned official complete package and verifies its SHA-256. The default is `0`, preserving the lightweight deployment.
 
-```text
-backend/bin/audiveris.jar
-```
+**This new path still needs a real Docker build and OMR validation; it is not covered by the previously verified workflows above.** See [Audiveris installation](docs/AUDIVERIS.md) for architecture support, commands, and verification boundaries.
+
+The existing `backend/bin/audiveris.jar` mount remains a legacy option. Do not copy only the main JAR out of a modern distribution. Installing on the Windows host does not install it in the container. This path targets conventional staff notation, not numbered-notation-only PDFs.
 
 ### PDF export: LilyPond
 
